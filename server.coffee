@@ -61,6 +61,6 @@ exports.init = (viewsDir) ->
 app = exports.init('www')
 g_Server = new WatchSession.Server app		
 
-port = process.env.port || 8989
+port = process.env.port || 80
 console.log 'Listening on port ' + port
 app.listen port
