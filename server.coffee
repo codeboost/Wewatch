@@ -2,9 +2,6 @@ express = require 'express'
 io = require 'socket.io'
 WatchSession = require './watchsession'
 
-
-
-
 exports.init = (viewsDir) ->
 	app = express.createServer()
 	app.configure ->
@@ -61,6 +58,6 @@ exports.init = (viewsDir) ->
 app = exports.init('www')
 g_Server = new WatchSession.Server app		
 
-port = process.env.port || 80
+port = process.env.port || 8989
 console.log 'Listening on port ' + port
 app.listen port
