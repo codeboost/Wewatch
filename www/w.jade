@@ -1,0 +1,54 @@
+!!! 5
+html
+	head
+		title Watchwithme
+		link(rel='stylesheet', type='text/css', href='/css/bootstrap-2.0.css')
+		script(src='/js/lib/jquery-1.7.1.min.js')
+		script(src='/js/lib/underscore.js')
+		script(src='/js/lib/backbone-0.5.3.js')		
+		script(src='/socket.io/socket.io.js')
+		script(src='/js/module.js')
+		script(src='/skull.io/skull.io.js')		
+		script(type='text/javascript')
+			WWM = {}
+			WWM.session =  {
+				id: #{session.id},
+				video: {
+					url: '#{session.video.url}',
+					position: #{session.video.position},
+					state: #{session.video.state},
+					owner: '#{session.video.owner}'
+				}
+			}
+			WWM.user = {
+				id: '#{user.id}'
+			}
+
+			
+body
+	.navbar.navbar-fixed
+		.navbar-inner
+			.container
+				a.brand Watch With Me
+
+	.container#main(style='margin-top: 50px')
+		.row
+			.span2
+			.span10
+				form.well.form-search(action='javascript: false')
+					h3 Youtube URL
+					.input
+						input.span8.large(type='text', name='url', style='height: 25px; font-size: 20px', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
+						|&nbsp;
+						button.btn.large.primary.watch(type='submit') Watch!
+		.row
+			.span2
+			.span10
+				#player
+		.row
+			.span2
+			.span10
+			.span2
+				.viewers
+						
+script(src='/js/app.js')

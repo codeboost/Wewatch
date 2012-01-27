@@ -1,0 +1,20 @@
+!!! 5
+html
+	head
+		title Watchwithme
+		link(rel='stylesheet', type='text/css', href='/css/bootstrap-2.0.css')
+body
+	.navbar.navbar-fixed
+		.navbar-inner
+			.container
+				a.brand Watch With Me
+
+	.container(style='margin-top: 50px')
+		section(id='url')
+			.row
+				form.well.form-search(action='/createSession', method='post')
+					h3 Youtube URL
+					.input
+						input.span8.large(type='text', name='url', style='height: 25px; font-size: 20px', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
+						|&nbsp;
+						button.btn.large.primary(type='submit') Watch!
