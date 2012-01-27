@@ -152,7 +152,9 @@
       url = $('[name=url]').val();
       videoId = extractVideoId(url);
       return WWM.models['video'].save({
-        url: url
+        url: url,
+        position: 0,
+        paused: false
       });
     });
   };
@@ -163,10 +165,13 @@
   });
 
   saveVideoState = function() {
+    var url;
     console.log('Current getCurrentTime: ', WWM.Player.getCurrentTime());
+    url = WWM.Player.getVideoUrl();
     return WWM.models['video'].save({
       paused: WWM.Player.getPlayerState() === YT.PlayerState.PAUSED,
-      position: Math.round(WWM.Player.getCurrentTime())
+      position: Math.round(WWM.Player.getCurrentTime()),
+      url: url
     }, {
       silent: true
     });

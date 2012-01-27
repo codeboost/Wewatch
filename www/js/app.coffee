@@ -91,6 +91,8 @@ connectToServer = ->
 		
 		WWM.models['video'].save 
 			url: url
+			position: 0
+			paused: false
 
 
 $ ->
@@ -101,10 +103,12 @@ $ ->
 
 saveVideoState = ->
 	console.log 'Current getCurrentTime: ', WWM.Player.getCurrentTime()
-
+	url = WWM.Player.getVideoUrl()
+	
 	WWM.models['video'].save
 		paused: WWM.Player.getPlayerState() == YT.PlayerState.PAUSED
 		position: Math.round(WWM.Player.getCurrentTime())
+		url: url
 	, silent: true
 
 
