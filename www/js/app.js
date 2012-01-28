@@ -1,5 +1,5 @@
 (function() {
-  var UserCollection, VideoModel, VideoView, ViewersView, connectToServer, extractVideoId, insertIframe, insertPlayer, saveVideoState,
+  var UserCollection, VideoModel, VideoView, connectToServer, extractVideoId, insertIframe, insertPlayer, saveVideoState,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
@@ -13,8 +13,8 @@
   };
 
   extractVideoId = function(url) {
-    var _ref, _ref2;
-    return (_ref = url.match(/v=(.{11})/)) != null ? (_ref2 = _ref[1]) != null ? _ref2.replace(/[^a-z0-9]/ig, '') : void 0 : void 0;
+    var _ref;
+    return (_ref = url.match(/v=(.{11})/)) != null ? _ref[1] : void 0;
   };
 
   WWM.Player = null;
@@ -62,6 +62,9 @@
       this.model.bind('change:url', this.changeUrl);
       this.model.bind('change:position', this.seek);
       this.model.bind('change:paused', this.pausedChanged);
+      this.model.bind('all', function() {
+        return WWM.updating = false;
+      });
       return this.changeUrl();
     };
 
@@ -83,8 +86,7 @@
       var videoId;
       videoId = extractVideoId(this.model.get('url'));
       if (videoId) {
-        this.loadVideo(videoId);
-        return this.seek();
+        return WWM.Player.loadVideoById(videoId, this.model.get('position'));
       }
     };
 
@@ -102,35 +104,13 @@
 
   })(Backbone.View);
 
-  ViewersView = (function(_super) {
-
-    __extends(ViewersView, _super);
-
-    function ViewersView() {
-      this.updateViewers = __bind(this.updateViewers, this);
-      ViewersView.__super__.constructor.apply(this, arguments);
-    }
-
-    ViewersView.prototype.initialize = function() {
-      this.collection.bind('change', this.updateViewers);
-      return this.updateViewers();
-    };
-
-    ViewersView.prototype.updateViewers = function() {
-      return $(this.el).text(this.collection.length + ' viewers');
-    };
-
-    return ViewersView;
-
-  })(Backbone.View);
-
   connectToServer = function() {
     var sio;
     sio = io.connect();
     sio.on('connect', function() {
       console.log('Connected to server');
       return sio.emit('join', WWM.session.id, function(err, data) {
-        var Skull, globalNS, videoView;
+        var Skull, globalNS, updateViewers, videoView;
         console.log('Joined session');
         WWM.connected = true;
         Skull = require('skull');
@@ -141,28 +121,21 @@
         videoView = new VideoView({
           model: WWM.models.video
         });
-        $('.viewers').text(WWM.models['users'].length + ' viewers');
-        return WWM.models['users'].bind('all', function() {
+        updateViewers = function() {
           return $('.viewers').text(WWM.models['users'].length + ' viewers');
-        });
+        };
+        WWM.models['users'].bind('all', updateViewers);
+        return updateViewers();
       });
     });
     return $('.watch').click(function() {
       var url, videoId;
       url = $('[name=url]').val();
       videoId = extractVideoId(url);
-      return WWM.models['video'].save({
-        url: url,
-        position: 0,
-        paused: false
-      });
+      console.log('Setting new video URL: ', url);
+      return WWM.Player.loadVideoById(videoId, 0);
     });
   };
-
-  $(function() {
-    console.log('Document ready');
-    return insertIframe();
-  });
 
   saveVideoState = function() {
     var url;
@@ -191,8 +164,8 @@
           return connectToServer();
         },
         'onStateChange': function(e) {
-          console.log('State changed: ', e.data);
           if (!WWM.connected) return;
+          console.log('State changed: ', e.data);
           if (WWM.models['video'].get('owner') === WWM.user.id) {
             if (e.data === YT.PlayerState.PLAYING) {
               clearTimeout(timerId);
@@ -213,5 +186,13 @@
     console.log('Youtube player API ready!');
     return insertPlayer();
   };
+
+  $(function() {
+    insertIframe();
+    return $('.change-video').click(function() {
+      $('.url-form').toggleClass('hidden');
+      return $('.url-form input').focus();
+    });
+  });
 
 }).call(this);

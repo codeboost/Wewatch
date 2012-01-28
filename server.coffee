@@ -15,15 +15,17 @@ exports.init = (viewsDir) ->
 
 
 	setUser = (req, res, next) ->
+
 		req.session.user ?= 
-			id: req.cookies['connect.sid']
+			id: req.sessionID
 		next()
 
 	app.get '/', setUser, (req, res) ->
-		console.log 'Connect.sid ', req.cookies['connect.sid']
+		console.log req.session
+		console.log 'Connect.sid ', req.sessionID
 
 		req.session.user = 
-			id: req.cookies['connect.sid']
+			id: req.sessionID
 
 		res.render 'index'
 

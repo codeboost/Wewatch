@@ -8,7 +8,8 @@ insertIframe = ->
 
 
 extractVideoId = (url) ->
-	url.match(/v=(.{11})/)?[1]?.replace(/[^a-z0-9]/ig,'')
+	url.match(/v=(.{11})/)?[1]
+	#?.replace(/[^a-z0-9]/ig,'')
 
 WWM.Player = null
 
@@ -19,14 +20,18 @@ class UserCollection extends Skull.Collection
 	url: '/users'
 
 class VideoView extends Backbone.View
-	
+	#we don't actually use el	
 	initialize: ->
 		@model.bind 'change:url', @changeUrl
 		@model.bind 'change:position', @seek
 		@model.bind 'change:paused', @pausedChanged
+		@model.bind 'all', -> 
+			WWM.updating = false
+
 		@changeUrl()
 
 	pausedChanged: =>
+
 		isPaused = @model.get 'paused'
 		if isPaused 
 			if WWM.Player.getPlayerState() != YT.PlayerState.PAUSED
@@ -38,9 +43,8 @@ class VideoView extends Backbone.View
 	changeUrl: =>
 		videoId = extractVideoId @model.get 'url'
 		if videoId
-			@loadVideo videoId 
-			@seek()
-
+			WWM.Player.loadVideoById videoId, @model.get('position') 
+		
 	seek: =>
 		console.log '-> Seeking to ', @model.get('position')
 		WWM.Player.seekTo @model.get('position'), true
@@ -48,14 +52,6 @@ class VideoView extends Backbone.View
 
 	loadVideo: (videoId) ->
 		WWM.Player.loadVideoById videoId
-
-class ViewersView extends Backbone.View
-	initialize: ->
-		@collection.bind 'change', @updateViewers
-		@updateViewers()
-
-	updateViewers: =>
-		$(@el).text @collection.length + ' viewers'
 
 connectToServer = ->
 
@@ -80,25 +76,20 @@ connectToServer = ->
 			videoView = new VideoView 
 				model: WWM.models.video
 			
-			$('.viewers').text WWM.models['users'].length + ' viewers'
-
-			WWM.models['users'].bind 'all', ->
+			updateViewers = ->
 				$('.viewers').text WWM.models['users'].length + ' viewers'
-	
+
+			WWM.models['users'].bind 'all', updateViewers
+			updateViewers()
+
 	$('.watch').click ->
 		url = $('[name=url]').val()
 		videoId = extractVideoId url
-		
-		WWM.models['video'].save 
-			url: url
-			position: 0
-			paused: false
 
+		console.log 'Setting new video URL: ', url
 
-$ ->
+		WWM.Player.loadVideoById videoId, 0
 
-	console.log 'Document ready'
-	insertIframe()
 
 
 saveVideoState = ->
@@ -113,11 +104,8 @@ saveVideoState = ->
 
 
 insertPlayer = ->
-	
 	timerId = 0
-
 	$('#player').replaceWith('<div id="player"></div>')
-
 	player = new YT.Player 'player'
 		height: 390
 		width: 780
@@ -128,10 +116,11 @@ insertPlayer = ->
 				connectToServer()
 
 			'onStateChange': (e) ->
-				console.log 'State changed: ', e.data
 				#only allow to broadcast state change from the owner
 				return unless WWM.connected
-			
+
+				console.log 'State changed: ', e.data
+							
 				if WWM.models['video'].get('owner') is WWM.user.id
 					if e.data == YT.PlayerState.PLAYING
 						clearTimeout timerId
@@ -147,4 +136,21 @@ window.onYouTubePlayerAPIReady = ->
 	console.log 'Youtube player API ready!'
 	insertPlayer()
 	
+
+$ ->
+	insertIframe()
+	$('.change-video').click ->
+		$('.url-form').toggleClass('hidden')
+
+		$('.url-form input').focus()
+
+
+
+
+
+
+
+
+
+
 
