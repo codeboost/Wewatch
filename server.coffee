@@ -54,12 +54,12 @@ exports.init = (viewsDir) ->
 				
 	return app
 
-
-
-
 app = exports.init('www')
 g_Server = new WatchSession.Server app		
 
-port = process.env.port || 8989
-console.log 'Listening on port ' + port
-app.listen port
+conf = require('./config')
+console.log conf
+port = conf.listen.port
+host = conf.listen.host
+console.log 'Listening on %s:%d ', host, port 
+app.listen port, host
