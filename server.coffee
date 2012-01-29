@@ -1,10 +1,6 @@
 express = require 'express'
 io = require 'socket.io'
 WatchSession = require './watchsession'
-mongoose = require 'mongoose'
-
-
-
 exports.init = (viewsDir) ->
 	app = express.createServer()
 	app.configure ->
