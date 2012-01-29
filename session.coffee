@@ -8,9 +8,6 @@ exports.Session = class Session
 	addUser: (socket) ->
 	
 	removeUser: (socket) ->
-		
-			
-
 
 exports.SessionManager = class SessionManager
 	
@@ -19,14 +16,18 @@ exports.SessionManager = class SessionManager
 		@io = io.listen app
 		@io.set 'authorization', (data, callback) ->
 			res = {}
-			express.cookieParser() data, res, ->
-				sid = data.cookies['connect.sid']
-				return callback('Error, not authorized', false) unless sid
-				SM.authorizeUser sid, (err, user) ->
-					return callback(err, false) if err
-					#store user auth in the socket.handshake structure
-					data.user = user
-					return callback(null, true)
+			await express.cookieParser() data, res, defer()
+			
+			sid = data.cookies['connect.sid']
+			return callback('Error, not authorized', false) unless sid
+
+			await SM.authorizeUser sid, defer(err, user)
+
+			return callback(err, false) if err
+			#store user auth in the socket.handshake structure
+			data.user = user
+			return callback(null, true)
+		
 		@io.sockets.on 'connection', (socket) ->
 			SM.userConnected socket
 

@@ -1,6 +1,9 @@
 express = require 'express'
 io = require 'socket.io'
 WatchSession = require './watchsession'
+mongoose = require 'mongoose'
+
+
 
 exports.init = (viewsDir) ->
 	app = express.createServer()
@@ -31,24 +34,27 @@ exports.init = (viewsDir) ->
 
 	app.post '/createSession', setUser, (req, res) ->
 		console.log 'Create session: ', req.session
-		g_Server.createSession 
+
+		await g_Server.createSession 
 			url: req.body.url
 			creator: req.session.user.id
-		, (err, data) ->
-			console.log 'Session: ', data
-			res.redirect "/w/#{data.id}"
+		, defer(err, data) 
+
+		console.log 'Session: ', data
+		res.redirect "/w/#{data.id}"
 
 	app.get '/w/:id', setUser, (req, res) ->
 		return res.send 500 unless req.session.user
 
-		g_Server.getSession req.params.id, (err, session) ->
-			return res.send 'No such session' if err isnt null
-			console.log 'Got session ', session
-			console.log 'Rendering session...'
-			console.log 'User id ' ,req.session.user.id
-			res.render 'w', 	
-				session: session
-				user: req.session.user
+		await g_Server.getSession req.params.id, defer(err, session)
+
+		return res.send 'No such session' if err isnt null
+		console.log 'Got session ', session
+		console.log 'Rendering session...'
+		console.log 'User id ' ,req.session.user.id
+		res.render 'w', 	
+			session: session
+			user: req.session.user
 
 			
 				
