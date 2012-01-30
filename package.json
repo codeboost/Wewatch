@@ -6,7 +6,8 @@
 		"socket.io": "> 0.8.4",
 		"underscore": ">=1.2.0",
 		"jade": ">=0.14.2",
-		"skull.io": ">0.1.0"
+		"skull.io": ">0.1.0",
+		"mongoose": "*"
 	},
 	"scripts": {
 		"start":"coffee server"
