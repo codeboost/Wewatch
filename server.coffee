@@ -1,21 +1,6 @@
 express = require 'express'
 io = require 'socket.io'
 WatchSession = require './watchsession'
-mongoose = require 'mongoose'
-conf = require('./config')
-require('./models')
-
-mongoose.connect conf.db.path
-
-mongoose.connection.on 'error', (err) ->
-	console.log 'FATAL: Database connection error. Please check if mongodb is running or edit configuration in conf.coffee'
-	process.exit -1
-
-SessionStore = require('./sessionStore').SessionStore
-sessionStore = new SessionStore()
-
-Models = 
-	User: mongoose.model 'User'
 
 exports.init = (viewsDir) ->
 	app = express.createServer()
@@ -23,33 +8,25 @@ exports.init = (viewsDir) ->
 		app.use express.bodyParser()
 		app.use express.cookieParser()
 		app.use express.static viewsDir 
-		app.use express.session {secret: '$#$wt00ne%%', store: sessionStore}
+		app.use express.session {secret: '$#$wt00ne%%', store: new express.session.MemoryStore}
 		app.set 'views', viewsDir
 		app.set 'view engine', 'jade'
 		app.set 'view options', layout: false
 
 
 	setUser = (req, res, next) ->
-		if not req.session.user
-			console.log 'Looking up user'
-			#lookup from database
-			await Models.User.findOne {sid: req.sessionID}, defer(err, user)
-			
-			console.log 'Looked up user: %d', err
 
-			if not user
-				console.log 'Creating blank user'
-				await Models.User.create {sid: req.sessionID}, defer(err, user)
-			else
-				console.log 'User found. UserId = ', user._id
-
-			req.session.user = user.toObject()
-
-			next()
-		else
-			next()
+		req.session.user ?= 
+			id: req.sessionID
+		next()
 
 	app.get '/', setUser, (req, res) ->
+		console.log req.session
+		console.log 'Connect.sid ', req.sessionID
+
+		req.session.user = 
+			id: req.sessionID
+
 		res.render 'index'
 
 	app.post '/createSession', setUser, (req, res) ->
@@ -65,7 +42,6 @@ exports.init = (viewsDir) ->
 
 	app.get '/w/:id', setUser, (req, res) ->
 		return res.send 500 unless req.session.user
-
 		await g_Server.getSession req.params.id, defer(err, session)
 
 		return res.send 'No such session' if err isnt null
@@ -83,7 +59,7 @@ exports.init = (viewsDir) ->
 app = exports.init('www')
 g_Server = new WatchSession.Server app		
 
-
+conf = require('./config')
 console.log conf
 port = conf.listen.port
 host = conf.listen.host
