@@ -1,8 +1,9 @@
 mongoose = require 'mongoose'
 
-UserSchema = new mongoose.UserSchema
+UserSchema = new mongoose.Schema
 	email: String
 	name: String
 	avatar: String
+	sid: String
 
 mongoose.model 'User', UserSchema

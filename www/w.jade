@@ -1,66 +1,57 @@
-!!! 5
-html
-	head
-		title WeWatch
-		link(rel='stylesheet', type='text/css', href='/css/bootstrap-2.0.css')
-		script(src='/js/lib/jquery-1.7.1.min.js')
-		script(src='/js/lib/console-dummy.js')
-		script(src='/js/lib/jquery-tubeplayer.js')
-		script(src='/js/lib/underscore.js')
-		script(src='/js/lib/backbone-0.5.3.js')		
-		script(src='/socket.io/socket.io.js')
-		script(src='/js/module.js')
-		script(src='/skull.io/skull.io.js')		
-		script(type='text/javascript')
-			WWM = {}
-			WWM.session =  {
-				id: #{session.id},
-				video: {
-					url: '#{session.video.url}',
-					position: #{session.video.position},
-					state: #{session.video.state},
-					owner: '#{session.video.owner}'
-				}
+extends layout
+block scripts
+	script(src='/js/lib/jquery-1.7.1.min.js')
+	script(src='/js/lib/console-dummy.js')
+	script(src='/js/lib/jquery-tubeplayer.js')
+	script(src='/js/lib/underscore.js')
+	script(src='/js/lib/backbone-0.5.3.js')		
+	script(src='/socket.io/socket.io.js')
+	script(src='/js/module.js')
+	script(src='/skull.io/skull.io.js')		
+	script(type='text/javascript')
+		WWM = {}
+		WWM.session =  {
+			id: #{session.id},
+			video: {
+				url: '#{session.video.url}',
+				position: #{session.video.position},
+				state: #{session.video.state},
+				owner: '#{session.video.owner}'
 			}
-			WWM.user = {
-				id: '#{user.id}'
-			}
-		style
-			#player{
-				width: 100%;
-			}
-			.viewers{
-				float: right;
-			}
+		}
+		WWM.user = {
+			id: '#{user.id}'
+		}
+	style
+		#player{
+			width: 100%;
+		}
+		.viewers{
+			float: right;
+		}
 			
-body
-	.navbar.navbar-fixed
-		.navbar-inner
-			.container
-				a.brand WeWatch
+block content
+	.row
+		.span12
+				h3 Share this URL:
+				form.well.form-search(action='javascript: false')
+					input.large(type='text', name='wurl', title='Double click to copy to clipboard', style='width: 100%;height: 30px; font-size: 20px',value='http://wewatch.me/w/#{session.id}', readonly='readonly')
 
-	.container#main(style='margin-top: 50px')
-		.row
-			.span12
-					h3 Share this URL:
-					form.well.form-search(action='javascript: false')
-						input.large(type='text', name='wurl', title='Double click to copy to clipboard', style='width: 100%;height: 30px; font-size: 20px',value='http://wewatch.me/w/#{session.id}', readonly='readonly')
-
-		.row
-			.span12
-				#player
-		.row
-			.span6 
-				a.change-video(href='#') change video
-			.span6
-				h3.viewers
-			
-		.row
-			.span12
-				form.form-search.hidden.url-form(action='javascript: false')
-					h3 Youtube URL:
-					input.large.span10(type='text', name='url', style='height: 30px; font-size: 20px', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
-					|&nbsp;
-					button.btn.large.primary.watch(type='submit') Watch!
-						
-script(src='/js/app.js')
+	.row
+		.span12
+			#player
+	.row
+		.span6 
+			a.change-video(href='#') change video
+		.span6
+			h3.viewers
+		
+	.row
+		.span12
+			form.form-search.hidden.url-form(action='javascript: false')
+				h3 Youtube URL:
+				input.large.span10(type='text', name='url', style='height: 30px; font-size: 20px', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
+				|&nbsp;
+				button.btn.large.primary.watch(type='submit') Watch!
+					
+	script(src='/js/app.js')

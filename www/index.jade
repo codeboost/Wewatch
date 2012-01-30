@@ -1,21 +1,44 @@
-!!! 5
-html
-	head
-		title WeWatch
-		link(rel='stylesheet', type='text/css', href='/css/bootstrap-2.0.css')
-body
-	.navbar.navbar-fixed
-		.navbar-inner
-			.container
-				a.brand WeWatch
+extends layout
+block scripts
+	script(src='/js/lib/jquery-1.7.1.min.js')
+	script(src='/js/index.js')
+block content
+	section(id='url')
+		.row
+			.span12.well
+				.row
+					.span12
+						h3 Enter a Youtube URL
+				.row
+					form.you(action='createSession', method='post')
+						.span8
+							input.span8(type='text', name='url', style='height: 25px; font-size: 20px;', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
+						.span4						
+							button.btn.large.primary(type='submit') Watch!
+				.row.err-message.hidden
+					.span8
+						.alert Not a valid youtube URL
+					.span4
+						&nbsp;
 
-	.container(style='margin-top: 50px')
-		section(id='url')
-			.row
-				form.well.form-search(action='/createSession', method='post')
-					h3 1. Enter a Youtube URL
-					.input
-						input.span8.large(type='text', name='url', style='height: 25px; font-size: 20px', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
-						|&nbsp;
-						button.btn.large.primary(type='submit') Watch!
-		section(id='help')
+	section(id='help')
+		.row
+			.span4
+				h3 What is this ?
+				p Wewatch.me allows you to watch youtube videos simultaneously with other people. 
+				| When you scroll, pause and play the video, everyone's video will scroll, pause or play at the same time.
+				| No registration required, just use it.
+
+			.span4
+				h3 Why ?
+				p Used in conjunction with Skype, it is a simple way to watch and discuss video clips.
+
+			.span4
+				h3 How ?
+				ul 
+					li Enter a youtube URL in the box above.
+					li Click the 'Watch!' button. A new page opens, with your video in it.
+					li Send the new URL to the people you want to watch the video with
+
+
+
