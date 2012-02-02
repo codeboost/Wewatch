@@ -1,57 +1,102 @@
 extends layout
 block scripts
-	script(src='/js/lib/jquery-1.7.1.min.js')
-	script(src='/js/lib/console-dummy.js')
-	script(src='/js/lib/jquery-tubeplayer.js')
-	script(src='/js/lib/underscore.js')
-	script(src='/js/lib/backbone-0.5.3.js')		
-	script(src='/socket.io/socket.io.js')
-	script(src='/js/module.js')
-	script(src='/skull.io/skull.io.js')		
-	script(type='text/javascript')
+	link(rel='stylesheet', type='text/css', href='/css/w.css')
+
+	script
 		WWM = {}
 		WWM.session =  {
-			id: #{session.id},
-			video: {
-				url: '#{session.video.url}',
-				position: #{session.video.position},
-				state: #{session.video.state},
-				owner: '#{session.video.owner}'
-			}
+			docid: '#{session.docid}',
+			_id: '#{session._id}'
 		}
 		WWM.user = {
-			id: '#{user.id}'
+			_id: '#{user._id}'
 		}
-	style
-		#player{
-			width: 100%;
-		}
-		.viewers{
-			float: right;
-		}
+
+	- if(isProduction){
+		script(src='/compiled.min.js')
+	- } else {
+		script(src='/vendor/jquery-1.7.1.min.js')
+		script(src='/vendor/console-dummy.js')
+		script(src='/vendor/underscore.js')
+		script(src='/vendor/backbone-0.5.3.js')		
+		script(src='/socket.io/socket.io.js')
+		script(src='/vendor/module.js')
+		script(src='/skull.io/skull.io.js')
+		script(src='/js/utils.js')	
+		script(src='/js/models.js')	
+		script(src='/js/playlist.js')	
+		script(src='/js/search.js')	
+		script(src='/js/app.js')	
+		- }
+	script
+		require('app').start();
+
 			
 block content
 	.row
-		.span12
-				h3 Share this URL:
-				form.well.form-search(action='javascript: false')
-					input.large(type='text', name='wurl', title='Double click to copy to clipboard', style='width: 100%;height: 30px; font-size: 20px',value='http://wewatch.me/w/#{session.id}', readonly='readonly')
+		.span4
+			.video-title
+		.span4
+			&nbsp;	
+	.row
+		.span8		
+			.row
+				.span8
+					#player
+			.row
+				.span4 
+					&nbsp;
+				.span4
+					h3.viewers
 
-	.row
-		.span12
-			#player
-	.row
-		.span6 
-			a.change-video(href='#') change video
-		.span6
-			h3.viewers
+		.span4
+			.row
+				.span4
+					.well.search-view
+						h4 Add video:
+						input.search-video(type='text')
+						.search-place.span4(style='margin-left: 0; overflow-y: auto; height: 200px')
+							table.search-results(width='100%')
+			.row
+				.span4
+					table.playlist(width='100%')
+
+	
+
+	
+
+
+	script#one-search-item(type='template')
+		td(width='60')
+			img.thumb(src='{{thumbnail}}')
+		td	
+			h4.video-title	{{title}}
 		
-	.row
-		.span12
-			form.form-search.hidden.url-form(action='javascript: false')
-				h3 Youtube URL:
-				input.large.span10(type='text', name='url', style='height: 30px; font-size: 20px', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
-				|&nbsp;
-				button.btn.large.primary.watch(type='submit') Watch!
-					
-	script(src='/js/app.js')
+	script#one-play-item(type='template')
+		td(width='140')
+			.thumbnail
+				img(src='{{thumbnail}}')
+				.vote-button
+
+		td(valign='top', align='left')
+			h4.video-title	{{title}}
+			.author {{uploader}}
+			.views {{viewCount}} views
+		td(valign='middle')
+			h3.vote-count {{voters? voters.length : 0}}
+
+		
+
+
+
+
+
+
+
+
+
+
+
+
+
+

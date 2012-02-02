@@ -6,3 +6,7 @@ CurVideoSchema = new mongoose.Schema
 	position: Number
 	paused: Boolean
 	owner: mongoose.Schema.ObjectId
+	id_session: mongoose.Schema.ObjectId
+
+
+mongoose.model 'CurVideo', CurVideoSchema

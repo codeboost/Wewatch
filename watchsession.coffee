@@ -2,9 +2,19 @@
 Session = require './session'
 Skull = require 'skull.io'
 _ = require 'underscore'
+MSkull = require './mongoose-skull'
+mongoose = require 'mongoose'
 
-g_SessionId = 1234
 g_UserId = 4585
+g_SessionId  = 1234
+
+class SessionModel extends MSkull.XModel
+	constructor: ->
+		super 'WatchSession'
+
+class PlaylistItem extends MSkull.XModel
+	constructor: (id_session) ->
+		super 'PlaylistItem', id_session: id_session
 
 class UserModel extends Skull.Model
 	constructor: ->
@@ -49,13 +59,20 @@ class VideoModel extends Skull.Model
 		@emit 'update', data, socket
 
 class WatchSession extends Session.Session
-	constructor: (@id, @ns) ->
+	constructor: (@options, @skullServer) ->
 		super
 		@users = new UserModel
 		@video = new VideoModel
+		@playlist = new PlaylistItem(@options._id)
+
+		@ns = @skullServer.of '' + @options._id
 		@ns.addModel '/users', @users
 		@ns.addModel '/video', @video
+		@ns.addModel '/playlist', @playlist
 		console.log 'Created watch session ', @id
+
+		@video.video.owner = @options.creator
+		@video.video.url = @options.url
 
 	addUser: (socket, callback) ->
 		user = socket.handshake.user
@@ -70,9 +87,14 @@ class WatchSession extends Session.Session
 		callback null
 
 	bootstrap: (callback) ->
+		
+		await @playlist.read {}, defer(err, playlist) 
+
 		ret = 
+			playlist: playlist
 			users: _.toArray @users.users
 			video: @video.video
+
 		callback null, ret
 
 
@@ -83,6 +105,21 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 		@users = {}
 		@activeUsers = {}
 		@skullServer = new Skull.Server @io
+		@sessionModel = new SessionModel 
+
+		#cannot get mapreduce to work, so i'll do it manually
+		await @sessionModel.model.find {}, {docid: 1}, defer(err, docs)
+
+		if err is null
+			maxVal = 0
+			_.each docs, (doc) ->
+				doc = doc.toObject()
+				return unless doc.docid
+				if doc.docid > maxVal then maxVal = doc.docid
+			
+			g_SessionId = maxVal ? 1234
+			g_SessionId = g_SessionId + 1 
+			console.log 'g_SessionId = ', g_SessionId
 
 	authorizeUser: (sid, callback) ->
 		console.log 'Authorize user %s ', sid
@@ -97,7 +134,6 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 		callback null, user
 
 	userConnected: (socket) ->
-		
 		user = socket.handshake.user
 		@activeUsers[user.id] = user if user
 		console.log 'User %s connected', user.id
@@ -118,21 +154,31 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 			session.bootstrap(callback)
 
 	createSession: (sessionData, callback) ->
-		sessionData.id = g_SessionId++
+		sessionData.docid = g_SessionId++
 		console.log 'Create session %j', sessionData
-		ns = @skullServer.of '' + sessionData.id
-		@sessions[sessionData.id] = new WatchSession(sessionData.id, ns)
-		@sessions[sessionData.id].video.video.url = sessionData.url 
-		@sessions[sessionData.id].video.video.owner = sessionData.creator
-		callback null, sessionData
-	
-	getSession: (id, callback) ->
-		callback 'no such session' unless @sessions[id]
 
-		sess = @sessions[id]
+		await @sessionModel.create sessionData, defer(err, sess)
+
+		return callback "error creating session" if err
+
+		@sessions[sess.docid] = new WatchSession(sess, @skullServer)
+			
+		callback null, sess
+	
+	getSession: (docid, callback) ->
+		#callback 'no such session' unless @sessions[id]
+
+		if not @sessions[docid]
+			await @sessionModel.findOne {docid: parseInt(docid)}, defer(err, sess)
+			console.log 'Session find: ', err, sess
+			return callback err ? "error, no such session" if not sess
+			@sessions[sess.docid] = new WatchSession(sess, @skullServer)
+
+		sess = @sessions[docid]
 
 		res = 
-			id: sess.id
+			docid: sess.options.docid
+			_id: sess.options._id
 			video: sess.video.video
 
 		callback null, res

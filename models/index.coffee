@@ -1,3 +1,4 @@
 require './curvideo'
 require './user'
-require './session'
+require './watchSession'
+require './playlistItem'

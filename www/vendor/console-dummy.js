@@ -10,3 +10,4 @@
 // inside the function is a name that can be shortened to a single
 // letter by the compressor to make the compressed script as tiny
 // as possible.
+
