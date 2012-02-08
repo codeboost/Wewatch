@@ -3,8 +3,6 @@ utils = require 'utils'
 
 class OneSearchItem extends Backbone.Model
 
-
-
 class SearchResultsCollection extends Backbone.Collection
 	model: OneSearchItem
 
@@ -23,7 +21,7 @@ class OneSearchItemView extends Backbone.View
 		@
 
 
-class SearchView extends Backbone.View
+exports.View = class SearchView extends Backbone.View
 	OneItemView: OneSearchItemView
 	events: 
 		'keyup input': 'oninputkeyup'
@@ -34,6 +32,8 @@ class SearchView extends Backbone.View
 
 	initialize: ->
 		@el = $ $(@domEl).html() if @domEl
+
+		@collection = new SearchResultsCollection
 		@collection.bind 'add', @addOne
 		@collection.bind 'reset', @addAll
 		@searchResults = @$('.search-place')
@@ -41,11 +41,14 @@ class SearchView extends Backbone.View
 		@input = @$('.search-video')
 		@searchTimer = 0
 		$(document).bind 'click', (e) =>
+			return if $(e.target).is('input.search-video') #don't hide if we click in the search input
 			@searchResults.hide()
 
+		@input.focus (e) =>
+			@showSearchResults()
+	
 		
 	onmouseover: (e) ->
-		console.log 'onmouseover'
 		$(e.currentTarget).addClass 'selected'
 	
 	onmouseout: (e) ->
@@ -69,7 +72,7 @@ class SearchView extends Backbone.View
 
 		@trigger 'selected', model
 		@searchResults.hide()
-
+	
 
 	getSelected: ->
 		cur = @$('.selected')
@@ -133,6 +136,7 @@ class SearchView extends Backbone.View
 		
 
 	showSearchResults: =>
+		return unless @collection.length 
 		@searchResults.show()
 		top = @searchResults.offset().top
 		docHeight = $(window).innerHeight()
@@ -178,11 +182,11 @@ class SearchView extends Backbone.View
 		@
 
 
-exports.init = (el) ->
+exports.createView = (el) ->
 	
 	new SearchView 
 		el: el
-		collection: new SearchResultsCollection
+		
 
 
 

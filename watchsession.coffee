@@ -8,6 +8,10 @@ mongoose = require 'mongoose'
 g_UserId = 4585
 g_SessionId  = 1234
 
+class SessionUser extends MSkull.XModel
+	constructor: (id_session) ->
+		super 'SessionUser', id_session: id_session
+
 class SessionModel extends MSkull.XModel
 	constructor: ->
 		super 'WatchSession'
@@ -42,9 +46,9 @@ class VideoModel extends Skull.Model
 	constructor: ->
 		@video = {
 			url: ''
-			state: -1
+			paused: false
 			position: 0
-			id: 1
+			_id: 'v01'
 			owner: ''
 		}
 
@@ -61,7 +65,7 @@ class VideoModel extends Skull.Model
 class WatchSession extends Session.Session
 	constructor: (@options, @skullServer) ->
 		super
-		@users = new UserModel
+		@users = new SessionUser @options._id
 		@video = new VideoModel
 		@playlist = new PlaylistItem(@options._id)
 
@@ -76,23 +80,31 @@ class WatchSession extends Session.Session
 
 	addUser: (socket, callback) ->
 		user = socket.handshake.user
-		@users.create user, null, socket
 
-		console.log 'Add user %s to session %s', user.id, @id
+		await @users.create 
+			id_user: user._id
+			name: user.name
+			email: user.email
+			id_session: @options._id
+			avatar: user.avatar
+		, defer(err, newUser), socket
+
+		console.log 'Add user %s to session %s', newUser.id, @id
 
 		socket.on 'disconnect', => 
 			console.log 'User disconnected'
-			@users.delete user, null, socket
+			@users.delete newUser, null, socket
 		
 		callback null
 
 	bootstrap: (callback) ->
 		
 		await @playlist.read {}, defer(err, playlist) 
+		await @users.read {}, defer(err, users)
 
 		ret = 
 			playlist: playlist
-			users: _.toArray @users.users
+			users: users
 			video: @video.video
 
 		callback null, ret
@@ -147,7 +159,7 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 		
 		console.log 'User %s joining session %s', socket.handshake.user.id, sessionId
 		session = @sessions[sessionId]
-		return callback 'no such session' unless session
+		return callback? 'no such session' unless session
 
 		session.addUser socket, (err) ->
 			return callback 'error adding user' if err
@@ -180,5 +192,6 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 			docid: sess.options.docid
 			_id: sess.options._id
 			video: sess.video.video
+			creator: sess.options.creator
 
 		callback null, res

@@ -24,7 +24,11 @@ exports.init = (viewsDir) ->
 		app.use express.bodyParser()
 		app.use express.cookieParser()
 		app.use express.static viewsDir 
-		app.use express.session {secret: '$#$wt00ne%%', store: sessionStore}
+		app.use express.session 
+			secret: '$#$wt00ne%%' 
+			store: sessionStore 
+			cookie: {maxAge: 24 * 3600 * 30 * 1000}
+
 		app.set 'views', viewsDir
 		app.set 'view engine', 'jade'
 		app.set 'view options', layout: false

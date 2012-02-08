@@ -71,7 +71,7 @@
 
   })(Backbone.View);
 
-  SearchView = (function(_super) {
+  exports.View = SearchView = (function(_super) {
 
     __extends(SearchView, _super);
 
@@ -107,19 +107,23 @@
     SearchView.prototype.initialize = function() {
       var _this = this;
       if (this.domEl) this.el = $($(this.domEl).html());
+      this.collection = new SearchResultsCollection;
       this.collection.bind('add', this.addOne);
       this.collection.bind('reset', this.addAll);
       this.searchResults = this.$('.search-place');
       this.items = $('.search-results', this.searchResults);
       this.input = this.$('.search-video');
       this.searchTimer = 0;
-      return $(document).bind('click', function(e) {
+      $(document).bind('click', function(e) {
+        if ($(e.target).is('input.search-video')) return;
         return _this.searchResults.hide();
+      });
+      return this.input.focus(function(e) {
+        return _this.showSearchResults();
       });
     };
 
     SearchView.prototype.onmouseover = function(e) {
-      console.log('onmouseover');
       return $(e.currentTarget).addClass('selected');
     };
 
@@ -220,6 +224,7 @@
 
     SearchView.prototype.showSearchResults = function() {
       var docHeight, srHeight, top;
+      if (!this.collection.length) return;
       this.searchResults.show();
       top = this.searchResults.offset().top;
       docHeight = $(window).innerHeight();
@@ -289,10 +294,9 @@
 
   })(Backbone.View);
 
-  exports.init = function(el) {
+  exports.createView = function(el) {
     return new SearchView({
-      el: el,
-      collection: new SearchResultsCollection
+      el: el
     });
   };
 

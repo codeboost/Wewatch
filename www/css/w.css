@@ -69,6 +69,18 @@
 			font-size: 12px;
 		}
 
+		.play-item .remove{
+			position: absolute;
+			top: 0;
+			right: 0;
+			text-decoration: none;
+			color: #999;
+		}
+
+		.play-item .remove:hover{
+			color: #000;
+		}
+
 		.search-place{
 			position: absolute;
 			z-index: 999;

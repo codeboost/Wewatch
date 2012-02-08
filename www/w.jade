@@ -6,7 +6,8 @@ block scripts
 		WWM = {}
 		WWM.session =  {
 			docid: '#{session.docid}',
-			_id: '#{session._id}'
+			_id: '#{session._id}',
+			creator: '#{session.creator}'
 		}
 		WWM.user = {
 			_id: '#{user._id}'
@@ -16,16 +17,21 @@ block scripts
 		script(src='/compiled.min.js')
 	- } else {
 		script(src='/vendor/jquery-1.7.1.min.js')
+		//script(src='/vendor/zepto.min.js')
 		script(src='/vendor/console-dummy.js')
 		script(src='/vendor/underscore.js')
-		script(src='/vendor/backbone-0.5.3.js')		
+		script(src='/vendor/backbone-0.5.3.js')
+		script(src='/vendor/bootstrap-modal.js')		
 		script(src='/socket.io/socket.io.js')
 		script(src='/vendor/module.js')
 		script(src='/skull.io/skull.io.js')
 		script(src='/js/utils.js')	
+		script(src='/js/ioState.js')	
+		script(src='/js/yt.js')
+		script(src='/js/playerView.js')		
 		script(src='/js/models.js')	
-		script(src='/js/playlist.js')	
 		script(src='/js/search.js')	
+		script(src='/js/playlist.js')	
 		script(src='/js/app.js')	
 		- }
 	script
@@ -48,8 +54,19 @@ block content
 					&nbsp;
 				.span4
 					h3.viewers
+			.row
+				.span8
+					| Enter message:
+			.row
+				.span8
+					input(type='text', name='chat-message', style='width: 100%')
+			
+			.row
+				.span8
+					ul.messages
+			
 
-		.span4
+		.span4.playlist-view
 			.row
 				.span4
 					.well.search-view
@@ -61,11 +78,9 @@ block content
 				.span4
 					table.playlist(width='100%')
 
-	
-
-	
 
 
+block templates
 	script#one-search-item(type='template')
 		td(width='60')
 			img.thumb(src='{{thumbnail}}')
@@ -82,10 +97,19 @@ block content
 			h4.video-title	{{title}}
 			.author {{uploader}}
 			.views {{viewCount}} views
-		td(valign='middle')
+		td(valign='middle', style='position: relative')
 			h3.vote-count {{voters? voters.length : 0}}
+			a.remove(href='#', class="{{WWM.isModerator ? '': 'hidden'}}" ) &times;
 
-		
+	#name-dialog.modal(style='display: none')
+		.modal-header
+			h3 What is your name ?
+		.modal-body
+			input(type='text')	
+		.modal-footer
+			a.btn.primary(href='#') OK
+
+	
 
 
 
