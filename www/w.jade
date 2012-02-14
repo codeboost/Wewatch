@@ -10,7 +10,8 @@ block scripts
 			creator: '#{session.creator}'
 		}
 		WWM.user = {
-			_id: '#{user._id}'
+			_id: '#{user._id}',
+			name: '#{user.name}'
 		}
 
 	- if(isProduction){
@@ -29,9 +30,11 @@ block scripts
 		script(src='/js/ioState.js')	
 		script(src='/js/yt.js')
 		script(src='/js/playerView.js')		
+		script(src='/js/name-dialog.js')	
 		script(src='/js/models.js')	
 		script(src='/js/search.js')	
 		script(src='/js/playlist.js')	
+		script(src='/js/chat.js')	
 		script(src='/js/app.js')	
 		- }
 	script
@@ -54,16 +57,16 @@ block content
 					&nbsp;
 				.span4
 					h3.viewers
-			.row
-				.span8
-					| Enter message:
-			.row
-				.span8
-					input(type='text', name='chat-message', style='width: 100%')
-			
-			.row
-				.span8
-					ul.messages
+			.chat-view
+				.row
+					.span8
+						| Enter message:
+				.row
+					.span8
+						input.chat-message(type='text', name='chat-message', style='width: 100%')
+				.row
+					.span8
+						ul.messages.items
 			
 
 		.span4.playlist-view
@@ -101,11 +104,15 @@ block templates
 			h3.vote-count {{voters? voters.length : 0}}
 			a.remove(href='#', class="{{WWM.isModerator ? '': 'hidden'}}" ) &times;
 
+
+	script#one-chat-item(type='template')
+		<b>{{from}}</b>:&nbsp;{-{message}}
+
 	#name-dialog.modal(style='display: none')
 		.modal-header
 			h3 What is your name ?
 		.modal-body
-			input(type='text')	
+			input(type='text', name='user-name')	
 		.modal-footer
 			a.btn.primary(href='#') OK
 

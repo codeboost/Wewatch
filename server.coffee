@@ -1,9 +1,11 @@
 express = require 'express'
 io = require 'socket.io'
-WatchSession = require './watchsession'
+WSMng = require './wsmng'
 mongoose = require 'mongoose'
 conf = require('./config')
 require('./models')
+_ = require 'underscore'
+MSkull = require './mongoose-skull'
 
 mongoose.connect conf.db.path
 
@@ -14,8 +16,13 @@ mongoose.connection.on 'error', (err) ->
 SessionStore = require('./sessionStore').SessionStore
 sessionStore = new SessionStore()
 
-Models = 
-	User: mongoose.model 'User'
+#Models = 
+#	User: mongoose.model 'User'
+
+class UserModel extends MSkull.Model
+	model: 'User'
+
+g_User = new UserModel
 
 
 exports.init = (viewsDir) ->
@@ -41,17 +48,17 @@ exports.init = (viewsDir) ->
 		if not req.session.user
 			console.log 'Looking up user'
 			#lookup from database
-			await Models.User.findOne {sid: req.sessionID}, defer(err, user)
+			await g_User.findOne {sid: req.sessionID}, defer(err, user)
 			
 			console.log 'Looked up user: %d', err
 
 			if not user
 				console.log 'Creating blank user'
-				await Models.User.create {sid: req.sessionID}, defer(err, user)
+				await g_User.create {sid: req.sessionID}, defer(err, user)
 			else
 				console.log 'User found. UserId = ', user._id
 
-			req.session.user = user.toObject()
+			req.session.user = user
 
 			next()
 		else
@@ -65,6 +72,10 @@ exports.init = (viewsDir) ->
 			url: req.body.url
 			creator: req.session.user._id
 		, defer(err, data) 
+
+		req.session.user.sessionId = data.docid
+		
+		await req.session.save defer(err) 
 
 		res.redirect "/w/#{data.docid}"
 
@@ -80,12 +91,28 @@ exports.init = (viewsDir) ->
 			session: session
 			user: req.session.user
 
+	app.post '/setName', setUser, (req, res) ->
+		name = req.body.name
+		return res.send 500 unless name?.length
+
+		name = _.escape name
+		req.session.user.name = name
+
+		await g_User.update req.session.user, defer(err, user) 
+
+		#update session members
+		g_Server.updateMemberDetails req.session.user.sessionId, req.session.user
+		req.session.save()
+		res.send {status: 'success'}
+
+		console.log req.session.user
+
 			
 				
 	return app
 
 app = exports.init('www')
-g_Server = new WatchSession.Server app		
+g_Server = new WSMng.Server app		
 
 
 console.log conf

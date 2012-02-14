@@ -2,6 +2,13 @@ window?.module?.enter 'models'
 
 Backbone.Model::idAttribute = '_id'
 
+
+class OneChatLine extends Backbone.Model
+
+class ChatLinesCollection extends Backbone.Collection
+	model: OneChatLine
+
+
 class VideoModel extends Skull.Model
 	url: '/video'
 
@@ -35,4 +42,5 @@ class Playlist extends Skull.Collection
 		models['video'] = ns.addModel new VideoModel(bootstrap.video)
 		models['users'] = ns.addModel  new UserCollection(bootstrap.users)
 		models['playlist'] = ns.addModel new Playlist(bootstrap.playlist)
+		models['chat'] = new ChatLinesCollection
 		models

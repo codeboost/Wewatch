@@ -29,9 +29,10 @@ exports.jsonify = jsonify = (item) ->
 exports.DbModel = class DbModel extends Skull.Model
 	jsonify: jsonify
 	
-exports.XModel = class XModel extends DbModel
+exports.Model = exports.XModel = class XModel extends DbModel
 	constructor: (@name, @filter) ->
-		@model = mongoose.model @name
+		name = @name ? @model
+		@model = mongoose.model name
 		console.log 'Fitler = %j', @filter
 		super
 		

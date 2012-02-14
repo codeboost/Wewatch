@@ -6,15 +6,6 @@ MSkull = require './mongoose-skull'
 mongoose = require 'mongoose'
 
 g_UserId = 4585
-g_SessionId  = 1234
-
-class SessionUser extends MSkull.XModel
-	constructor: (id_session) ->
-		super 'SessionUser', id_session: id_session
-
-class SessionModel extends MSkull.XModel
-	constructor: ->
-		super 'WatchSession'
 
 class PlaylistItem extends MSkull.XModel
 	constructor: (id_session) ->
@@ -23,6 +14,18 @@ class PlaylistItem extends MSkull.XModel
 class UserModel extends Skull.Model
 	constructor: ->
 		@users = {}	
+		@idUser = 9944
+
+	next_id: ->
+		@idUser++
+
+	findByUid: (uid, callback) ->
+		for key, user of @users
+			if user.id_user == uid 
+				return callback null, user
+
+		callback null
+		
 
 	read: (filter, callback) ->
 		callback null, _.toArray @users
@@ -41,6 +44,12 @@ class UserModel extends Skull.Model
 		delete @users[data.id]
 		callback? null, data
 		@emit 'delete', data, socket
+
+	broadcast: (data, callback, socket) ->
+		data.message = _.escape data.message
+		callback? null
+		@emit 'broadcast', data, socket
+
 	
 class VideoModel extends Skull.Model
 	constructor: ->
@@ -62,10 +71,16 @@ class VideoModel extends Skull.Model
 		callback null, data
 		@emit 'update', data, socket
 
-class WatchSession extends Session.Session
+
+
+exports.Model = class SessionModel extends MSkull.XModel
+	constructor: ->
+		super 'WatchSession'
+				
+exports.One = class WatchSession extends Session.Session
 	constructor: (@options, @skullServer) ->
 		super
-		@users = new SessionUser @options._id
+		@users = new UserModel
 		@video = new VideoModel
 		@playlist = new PlaylistItem(@options._id)
 
@@ -81,8 +96,11 @@ class WatchSession extends Session.Session
 	addUser: (socket, callback) ->
 		user = socket.handshake.user
 
+		console.log 'Add User: ', user
+
 		await @users.create 
 			id_user: user._id
+			_id: @users.next_id()
 			name: user.name
 			email: user.email
 			id_session: @options._id
@@ -97,6 +115,23 @@ class WatchSession extends Session.Session
 		
 		callback null
 
+	updateMemberDetails: (user, callback) ->
+		console.log 'Updating member details: ', user
+
+		await @users.findByUid user._id, defer(err, member)
+
+		if not member 
+			return callback? "not found: " + err 
+		
+		member.name = user.name
+		member.email = user.email
+		member.avatar = user.avatar
+
+		await @users.update member, defer(err, member) 
+
+		callback? err, member
+
+
 	bootstrap: (callback) ->
 		
 		await @playlist.read {}, defer(err, playlist) 
@@ -110,88 +145,10 @@ class WatchSession extends Session.Session
 		callback null, ret
 
 
-exports.Server = class WatchSessionManager extends Session.SessionManager
-	constructor: ->
-		super
-		@sessions = {}
-		@users = {}
-		@activeUsers = {}
-		@skullServer = new Skull.Server @io
-		@sessionModel = new SessionModel 
 
-		#cannot get mapreduce to work, so i'll do it manually
-		await @sessionModel.model.find {}, {docid: 1}, defer(err, docs)
 
-		if err is null
-			maxVal = 0
-			_.each docs, (doc) ->
-				doc = doc.toObject()
-				return unless doc.docid
-				if doc.docid > maxVal then maxVal = doc.docid
-			
-			g_SessionId = maxVal ? 1234
-			g_SessionId = g_SessionId + 1 
-			console.log 'g_SessionId = ', g_SessionId
 
-	authorizeUser: (sid, callback) ->
-		console.log 'Authorize user %s ', sid
-		user = @users[sid]
-		if not user
-			user = 
-				sid: sid
-				id: sid
 
-			@users[sid] = user
 
-		callback null, user
 
-	userConnected: (socket) ->
-		user = socket.handshake.user
-		@activeUsers[user.id] = user if user
-		console.log 'User %s connected', user.id
 
-	userDisconnected: (socket) ->
-		user = socket.handshake.user
-		delete @activeUsers[user.id] if user
-		console.log 'User %s disconnected', user.id
-
-	userJoin: (sessionId, socket, callback) ->
-		
-		console.log 'User %s joining session %s', socket.handshake.user.id, sessionId
-		session = @sessions[sessionId]
-		return callback? 'no such session' unless session
-
-		session.addUser socket, (err) ->
-			return callback 'error adding user' if err
-			session.bootstrap(callback)
-
-	createSession: (sessionData, callback) ->
-		sessionData.docid = g_SessionId++
-		console.log 'Create session %j', sessionData
-
-		await @sessionModel.create sessionData, defer(err, sess)
-
-		return callback "error creating session" if err
-
-		@sessions[sess.docid] = new WatchSession(sess, @skullServer)
-			
-		callback null, sess
-	
-	getSession: (docid, callback) ->
-		#callback 'no such session' unless @sessions[id]
-
-		if not @sessions[docid]
-			await @sessionModel.findOne {docid: parseInt(docid)}, defer(err, sess)
-			console.log 'Session find: ', err, sess
-			return callback err ? "error, no such session" if not sess
-			@sessions[sess.docid] = new WatchSession(sess, @skullServer)
-
-		sess = @sessions[docid]
-
-		res = 
-			docid: sess.options.docid
-			_id: sess.options._id
-			video: sess.video.video
-			creator: sess.options.creator
-
-		callback null, res

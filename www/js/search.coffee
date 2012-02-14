@@ -55,7 +55,6 @@ exports.View = class SearchView extends Backbone.View
 		$(e.currentTarget).removeClass 'selected'
 	
 	onkeyup: (e) =>
-		console.log 'Keyup'
 		if e.keyCode == 27
 			@searchResults.hide()
 			false
@@ -117,7 +116,6 @@ exports.View = class SearchView extends Backbone.View
 			if txt != @lastText
 				@lastText = txt
 				clearTimeout @searchTimer
-				console.log 'Setting timer ', @searchTimer
 				@searchTimer = setTimeout @performSearch, 250
 			else
 				@showSearchResults()

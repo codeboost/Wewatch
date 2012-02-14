@@ -14,22 +14,40 @@ class exports.PlayerView extends Backbone.View
 
 		@player.state.bind 'ready', =>
 			@changeUrl()
+
+		#saveStateTimer
+		@st = 0 
 		
 		@player.insertPlayer()
-
-		for event in ['playing', 'paused', 'seeked']
-			@player.bind event, @delaySaveState
 		
+		#player state changes -> save it
+		@player.bind 'playing', => 
+			console.log '~ Playing'
+			@delaySaveState()
+
+		@player.bind 'paused', =>
+			console.log '~ Paused'
+		 @delaySaveState()
+
+		@player.bind 'seeked', =>
+			console.log '~ Seeked'
+			@delaySaveState()
+
 	delaySaveState: =>
-		_.delay @saveState, 150 if WWM.isModerator
+		clearTimeout(@st)
+		@st = _.delay @saveState, 150 if WWM.isModerator
 	
 	saveState: =>
 		return if @changingURL
-		@model.save
+		
+		state = 
 			paused: @player.isPaused()
 			position: @player.getCurrentTime()
 			url: @player.getVideoUrl()
-		, silent: true
+
+		console.log '*Saving state: ', state
+
+		@model.save state, silent: true
 
 	pausedChanged: =>
 		if @model.get 'paused' 
@@ -39,15 +57,12 @@ class exports.PlayerView extends Backbone.View
 		
 	changeUrl: =>
 
+		console.log 'Change URL: ' + @model.get('url') + ' -> ' + @model.get('position')
 		videoId = utils.extractVideoId @model.get 'url'
 		if videoId
 			@changingURL = true
 			@player.cueVideoById videoId, @model.get('position')
-			@seek()
-			if @model.get('paused') 
-				@player.pauseVideo()
 			@changingURL = false
 
-		
 	seek: =>
 		@player.seekTo @model.get('position'), true
