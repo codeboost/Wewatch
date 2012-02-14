@@ -27,7 +27,7 @@
 
     NameDialog.prototype.initialize = function() {
       var _this = this;
-      this.el = $('#name-dialog');
+      this.setElement($('#name-dialog'));
       return this.$('.btn.primary').click(function(e) {
         var name;
         console.log('Clicked');
@@ -41,7 +41,7 @@
           if (typeof _this.callback === "function") {
             _this.callback(_this.model.toJSON());
           }
-          return _this.el.modal('hide');
+          return _this.$el.modal('hide');
         });
       });
     };
@@ -52,7 +52,7 @@
 
     NameDialog.prototype.show = function(callback) {
       this.callback = callback;
-      this.el.show().modal({
+      this.$el.show().modal({
         backdrop: 'static',
         keyboard: false
       });

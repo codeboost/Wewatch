@@ -55,7 +55,9 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 	userJoin: (sessionId, socket, callback) ->
 		
 		console.log 'User %s joining session %s', socket.handshake.user._id, sessionId
-		session = @sessions[sessionId]
+
+		await @getSession sessionId, defer(err, session)
+	
 		return callback? 'no such session' unless session
 
 		session.addUser socket, (err) ->
@@ -70,28 +72,20 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 
 		return callback "error creating session" if err
 
-		@sessions[sess.docid] = new WatchSession.One(sess, @skullServer)
+		sess = @sessions[sess.docid] = new WatchSession.One(sess, @skullServer)
 			
 		callback null, sess
 	
 	getSession: (docid, callback) ->
-		#callback 'no such session' unless @sessions[id]
 
 		if not @sessions[docid]
 			await @sessionModel.findOne {docid: parseInt(docid)}, defer(err, sess)
-			console.log 'Session find: ', err, sess
 			return callback err ? "error, no such session" if not sess
 			@sessions[sess.docid] = new WatchSession.One(sess, @skullServer)
 
 		sess = @sessions[docid]
 
-		res = 
-			docid: sess.options.docid
-			_id: sess.options._id
-			video: sess.video.video
-			creator: sess.options.creator
-
-		callback null, res
+		callback null, sess
 
 	#update member details in the user's session
 	updateMemberDetails: (sessionId, user, callback) ->

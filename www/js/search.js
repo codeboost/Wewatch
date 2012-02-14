@@ -233,8 +233,11 @@
         });
       } else {
         return $.getJSON('https://gdata.youtube.com/feeds/api/videos?q=' + txt + '&v=2&alt=jsonc&callback=?', function(resp, textStatus) {
-          var item, items, _ref2;
+          var item, items, nr, _ref2;
           if (textStatus === 'success' && (resp != null ? (_ref2 = resp.data) != null ? _ref2.totalItems : void 0 : void 0)) {
+            nr = _.filter(resp.data.items, function(item) {
+              return !item.restrictions;
+            });
             items = (function() {
               var _i, _len, _ref3, _results;
               _ref3 = resp.data.items;

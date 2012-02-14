@@ -36,11 +36,13 @@ class Playlist extends Skull.Collection
 		votes = item.get('voters')?.length ? 0
 		-votes
 
-			
-	exports.init = (ns, bootstrap) ->
-		models = {}
-		models['video'] = ns.addModel new VideoModel(bootstrap.video)
-		models['users'] = ns.addModel  new UserCollection(bootstrap.users)
-		models['playlist'] = ns.addModel new Playlist(bootstrap.playlist)
-		models['chat'] = new ChatLinesCollection
-		models
+exports.init = (ns, bootstrap) ->
+
+	models = WWM.models ?= {}
+
+	(models.video ?= ns.addModel new VideoModel).set bootstrap.video
+	(models.users ?= ns.addModel new UserCollection).reset bootstrap.users
+	(models.playlist ?= ns.addModel new Playlist).reset bootstrap.playlist
+	(models.chat ?= new ChatLinesCollection)
+
+	models

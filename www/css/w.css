@@ -127,8 +127,14 @@
 	visibility: visible;
 }
 
+.twitter-share-button{
+	float: right;
+	margin-right: 4px;
+}
 
-
+.fb-share-button{
+	float: right;
+}
 
 
 

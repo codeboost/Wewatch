@@ -31,17 +31,17 @@ class UserModel extends Skull.Model
 		callback null, _.toArray @users
 
 	create: (data, callback, socket) ->
-		@users[data.id] = data
+		@users[data._id] = data
 		callback? null, data
 		@emit 'create', data, socket
 
 	update: (data, callback, socket) ->
-		@users[data.id] = data
+		@users[data._id] = data
 		callback? null, data
 		@emit 'update', data, socket
 
 	delete: (data, callback, socket) ->
-		delete @users[data.id]
+		delete @users[data._id]
 		callback? null, data
 		@emit 'delete', data, socket
 
@@ -107,7 +107,7 @@ exports.One = class WatchSession extends Session.Session
 			avatar: user.avatar
 		, defer(err, newUser), socket
 
-		console.log 'Add user %s to session %s', newUser.id, @id
+		console.log 'Add user %s to session %s', newUser._id, @id
 
 		socket.on 'disconnect', => 
 			console.log 'User disconnected'
@@ -144,7 +144,13 @@ exports.One = class WatchSession extends Session.Session
 
 		callback null, ret
 
-
+	data: ->
+		res = 
+			docid: @options.docid
+			_id: @options._id
+			video: @video.video
+			creator: @options.creator
+		res
 
 
 

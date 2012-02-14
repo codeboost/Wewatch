@@ -10,7 +10,7 @@ class OneChatView extends Backbone.View
 		@model.bind 'change', @render
 
 	render: =>
-		$(@el).html @template @model.toJSON()
+		@$el.html @template @model.toJSON()
 		@
 
 class Messages extends Backbone.View
@@ -21,10 +21,10 @@ class Messages extends Backbone.View
 
 	addOne: (item) =>
 		view = new OneChatView model: item
-		@el.prepend view.render().el
+		@$el.prepend view.render().el
 
 	addAll: (items) ->
-		@el.empty()
+		@$el.empty()
 		@collection.each @addOne
 
 	render: ->

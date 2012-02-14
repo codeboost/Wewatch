@@ -161,7 +161,7 @@ exports.View = class SearchView extends Backbone.View
 		else
 			$.getJSON 'https://gdata.youtube.com/feeds/api/videos?q=' + txt + '&v=2&alt=jsonc&callback=?', (resp, textStatus) =>
 				if textStatus == 'success' and resp?.data?.totalItems
-					items = (@extractAttributes(item) for item in resp.data.items)
+				items = (@extractAttributes(item) for item in resp.data.items)
 					@collection.reset items
 					@showSearchResults()
 				else

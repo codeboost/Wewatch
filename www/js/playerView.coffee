@@ -58,11 +58,19 @@ class exports.PlayerView extends Backbone.View
 	changeUrl: =>
 
 		console.log 'Change URL: ' + @model.get('url') + ' -> ' + @model.get('position')
+
 		videoId = utils.extractVideoId @model.get 'url'
 		if videoId
 			@changingURL = true
 			@player.cueVideoById videoId, @model.get('position')
+			@seek()
+			if @model.get('paused') 
+				@player.pauseVideo()
+	
 			@changingURL = false
 
+	onShow: =>
+		@seek()
+		
 	seek: =>
 		@player.seekTo @model.get('position'), true

@@ -4,7 +4,7 @@ class UserModel extends Backbone.Model
 
 class NameDialog extends Backbone.View
 	initialize: ->
-		@el = $('#name-dialog')
+		@setElement $('#name-dialog')
 
 		@$('.btn.primary').click (e) =>
 			console.log 'Clicked'
@@ -14,14 +14,14 @@ class NameDialog extends Backbone.View
 			$.post '/setName',  {name: name}, (err, resp) =>
 				@model.set name: name
 				@callback? (@model.toJSON())
-				@el.modal('hide')
+				@$el.modal('hide')
 
 
 	render: ->
 		@
 
 	show: (@callback) ->
-		@el.show().modal
+		@$el.show().modal
 			backdrop: 'static'
 			keyboard: false
 

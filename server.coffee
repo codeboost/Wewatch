@@ -71,7 +71,9 @@ exports.init = (viewsDir) ->
 		await g_Server.createSession 
 			url: req.body.url
 			creator: req.session.user._id
-		, defer(err, data) 
+		, defer(err, sess) 
+
+		data = sess.data()
 
 		req.session.user.sessionId = data.docid
 		
@@ -85,7 +87,10 @@ exports.init = (viewsDir) ->
 		console.log 'Getting session ', req.params.id
 		await g_Server.getSession req.params.id, defer(err, session)
 		
-		return res.send 'No such session' if err isnt null
+		return res.send 'No such session' if err isnt null or session is null
+		
+		session = session.data()
+
 		console.log 'Rendering session...', session
 		res.render 'w', 	
 			session: session

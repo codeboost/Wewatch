@@ -89,14 +89,12 @@
 
     PlaylistView.prototype.initialize = function() {
       var _this = this;
-      if (this.domEl) this.el = $($(this.domEl).html());
       this.collection.bind('add', this.addOne);
       this.collection.bind('reset', this.addAll);
-      this.collection.bind('change:voters', function() {
+      return this.collection.bind('change:voters', function() {
         console.log('Voters changed');
         return _this.collection.sort();
       });
-      return this.items = this.el;
     };
 
     PlaylistView.prototype.addOne = function(item) {
@@ -104,11 +102,11 @@
       view = new OnePlayItem({
         model: item
       });
-      return this.items.append(view.render().el);
+      return this.$el.append(view.render().el);
     };
 
     PlaylistView.prototype.addAll = function() {
-      this.items.empty();
+      this.$el.empty();
       return this.collection.each(this.addOne);
     };
 

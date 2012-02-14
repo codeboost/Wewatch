@@ -104,18 +104,18 @@
       return -votes;
     };
 
-    exports.init = function(ns, bootstrap) {
-      var models;
-      models = {};
-      models['video'] = ns.addModel(new VideoModel(bootstrap.video));
-      models['users'] = ns.addModel(new UserCollection(bootstrap.users));
-      models['playlist'] = ns.addModel(new Playlist(bootstrap.playlist));
-      models['chat'] = new ChatLinesCollection;
-      return models;
-    };
-
     return Playlist;
 
   })(Skull.Collection);
+
+  exports.init = function(ns, bootstrap) {
+    var models, _ref2, _ref3, _ref4, _ref5;
+    models = (_ref2 = WWM.models) != null ? _ref2 : WWM.models = {};
+    ((_ref3 = models.video) != null ? _ref3 : models.video = ns.addModel(new VideoModel)).set(bootstrap.video);
+    ((_ref4 = models.users) != null ? _ref4 : models.users = ns.addModel(new UserCollection)).reset(bootstrap.users);
+    ((_ref5 = models.playlist) != null ? _ref5 : models.playlist = ns.addModel(new Playlist)).reset(bootstrap.playlist);
+    if (models.chat == null) models.chat = new ChatLinesCollection;
+    return models;
+  };
 
 }).call(this);

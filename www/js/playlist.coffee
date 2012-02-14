@@ -54,21 +54,19 @@ class OnePlayItem extends Backbone.View
 class PlaylistView extends Backbone.View
 
 	initialize: ->
-		@el = $ $(@domEl).html() if @domEl
 		@collection.bind 'add', @addOne
 		@collection.bind 'reset', @addAll
 		#@collection.bind 'votes-changed', @collection.sort
 		@collection.bind 'change:voters', =>
 			console.log 'Voters changed'
 			@collection.sort()
-		@items = @el
 
 	addOne: (item) =>
 		view = new OnePlayItem model: item
-		@items.append view.render().el
+		@$el.append view.render().el
 
 	addAll: =>
-		@items.empty()
+		@$el.empty()
 		@collection.each @addOne
 
 	render: =>

@@ -25,7 +25,7 @@
     };
 
     OneChatView.prototype.render = function() {
-      $(this.el).html(this.template(this.model.toJSON()));
+      this.$el.html(this.template(this.model.toJSON()));
       return this;
     };
 
@@ -52,11 +52,11 @@
       view = new OneChatView({
         model: item
       });
-      return this.el.prepend(view.render().el);
+      return this.$el.prepend(view.render().el);
     };
 
     Messages.prototype.addAll = function(items) {
-      this.el.empty();
+      this.$el.empty();
       return this.collection.each(this.addOne);
     };
 

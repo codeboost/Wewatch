@@ -21,7 +21,7 @@ block scripts
 		//script(src='/vendor/zepto.min.js')
 		script(src='/vendor/console-dummy.js')
 		script(src='/vendor/underscore.js')
-		script(src='/vendor/backbone-0.5.3.js')
+		script(src='/vendor/backbone-0.9.1.js')
 		script(src='/vendor/bootstrap-modal.js')		
 		script(src='/socket.io/socket.io.js')
 		script(src='/vendor/module.js')
@@ -42,11 +42,18 @@ block scripts
 
 			
 block content
+	.row.connection-view(style='display: none')
+		.span8
+			.alert.error
+				h4.alert-heading Connection problem
+				.alert-body Lost connection to server. Hold on while I try to re-establish the connection.
 	.row
 		.span4
-			.video-title
+			h3.video-title Title
 		.span4
-			&nbsp;	
+			a.fb-share-button(name='fb_share', type='button')
+			a.twitter-share-button(href="https://twitter.com/share", data-count="none") Tweet
+			script !function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");
 	.row
 		.span8		
 			.row
@@ -54,7 +61,7 @@ block content
 					#player
 			.row
 				.span4 
-					&nbsp;
+					h3.total-views &nbsp;
 				.span4
 					h3.viewers
 			.chat-view
@@ -81,7 +88,7 @@ block content
 				.span4
 					table.playlist(width='100%')
 
-
+	script(src='http://static.ak.fbcdn.net/connect.php/js/FB.Share')
 
 block templates
 	script#one-search-item(type='template')

@@ -13,14 +13,62 @@ catch e
 	Skull = require 'skull'
 
 WWM.Player = null
-WWM.isModerator = WWM.session.creator == WWM.user._id
-WWM.playbackState = 'playing'
 
+WWM.isModerator = WWM.session.creator == WWM.user._id
+
+#flag is true when the views have been created
+WWM.initialized = false
+
+
+class VideoInfo extends Backbone.View
+
+	initialize: ->
+		@title = @$('.video-title')
+		@viewers = @$('.viewers')
+		@totalViews = @$('.total-views')
+		@model.bind 'change', @update
+
+		@options.usersModel.bind 'all', @updateViewers
+
+		@update()
+		@updateViewers()
+
+	updateViewers: =>
+		@viewers.text @options.usersModel.length + ' viewers'
+
+	update: =>
+		@title.text @model.get 'title'
+
+		viewCount = @model.get('viewCount')
+		viewCount = if viewCount then viewCount + ' views' else ' '
+		@totalViews.text viewCount
+
+class ConnectionView extends Backbone.View
+	initialize: ->
+		@model.bind 'change', @update
+
+	update: =>
+		state = @model.get 'state'
+		if state is 'disconnected'
+			@$el.show()
+		else
+			@$el.hide()
 
 class AppView extends Backbone.View
 	initialize: ->
 
-		@el = $('#main-container')
+		@setElement $('#main-container')
+
+		@connectionView = new ConnectionView
+			el: $('.connection-view')
+			model: WWM.conn
+
+		@videoInfo = new VideoInfo 
+			el: @el
+			model: WWM.models.video
+			usersModel: WWM.models.users
+
+
 		@playerView = new PlayerView.PlayerView
 			model: WWM.models.video
 
@@ -30,13 +78,11 @@ class AppView extends Backbone.View
 		
 		@playlistView.collection.bind 'selected', (model) ->
 			console.log 'Selected: ', model.toJSON()
-			WWM.models.video.save model.toJSON()
+			WWM.models.video.set model.toJSON()
 
 		@chatView = new Chat.View
 			el: @$('.chat-view')
 			collection: WWM.models.chat
-
-		WWM.models.users.bind 'all', @updateViewers
 
 		WWM.models.users.bind 'server-broadcast', (data) ->
 			WWM.models.chat.add data
@@ -46,16 +92,11 @@ class AppView extends Backbone.View
 		WWM.models.chat.bind 'new-msg', (data) ->
 			WWM.models.users.broadcast data
 
-
-
 		@playlistView.render()
-		@updateViewers()
-	
-	updateViewers: =>
-		@$('.viewers').text WWM.models.users.length + ' viewers'
 
+		WWM.initialized = true
 	show: ->
-		@el.show()
+		@$el.show()
 		@
 
 
@@ -65,29 +106,22 @@ createYTFrame = ->
 	firstTag = document.getElementsByTagName('script')[0]
 	firstTag.parentNode.insertBefore tag, firstTag
 
+updateModels = (bootstrap) ->
+	WWM.models.video.set bootstrap.video
+	WWM.models.users.reset bootstrap.users
+	WWM.models.playlist.reset bootstrap.playlist
+
 window.onYouTubePlayerAPIReady = ->
-	console.log 'Youtube player API ready!'
-	console.log 'Connecting to server'
-
-	model = new Backbone.Model 
-		name: 'Maria'
-		age: 16
-
-	model.bind 'change:name', (newv) ->
-		console.log 'Name is ' + @get('name') + ' and age is ' + @get('age')
-
-	model.set 
-		name: 'John'
-		age: 23
-
-
-
 	WWM.conn = new ioState.ConnectionState
 	WWM.conn.bind 'joined', (bootstrap) ->
-			globalNS = Skull.createClient WWM.conn.sio.of(WWM.session._id)
-			WWM.models = require('models').init(globalNS, bootstrap)
 
-			if WWM.user.name?.length
+			globalNS = Skull.createClient WWM.conn.sio.of(WWM.session._id)
+			require('models').init(globalNS, bootstrap)
+
+			if WWM.initialized 
+				return
+			
+			if WWM.user.name?.length 
 				return (new AppView).show()
 
 			NameDialog.show (mdl) ->

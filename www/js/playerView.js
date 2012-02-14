@@ -16,6 +16,7 @@
 
     function PlayerView() {
       this.seek = __bind(this.seek, this);
+      this.onShow = __bind(this.onShow, this);
       this.changeUrl = __bind(this.changeUrl, this);
       this.pausedChanged = __bind(this.pausedChanged, this);
       this.saveState = __bind(this.saveState, this);
@@ -84,8 +85,14 @@
       if (videoId) {
         this.changingURL = true;
         this.player.cueVideoById(videoId, this.model.get('position'));
+        this.seek();
+        if (this.model.get('paused')) this.player.pauseVideo();
         return this.changingURL = false;
       }
+    };
+
+    PlayerView.prototype.onShow = function() {
+      return this.seek();
     };
 
     PlayerView.prototype.seek = function() {
