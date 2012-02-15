@@ -37,10 +37,10 @@ class VideoInfo extends Backbone.View
 		@viewers.text @options.usersModel.length + ' viewers'
 
 	update: =>
-		@title.text @model.get 'title'
+		#@title.text @model.get 'title'
 
 		viewCount = @model.get('viewCount')
-		viewCount = if viewCount then viewCount + ' views' else ' '
+		viewCount = if viewCount then viewCount + ' views' else '0'
 		@totalViews.text viewCount
 
 class ConnectionView extends Backbone.View
@@ -77,8 +77,10 @@ class AppView extends Backbone.View
 			el: @$('.playlist-view')
 		
 		@playlistView.collection.bind 'selected', (model) ->
-			console.log 'Selected: ', model.toJSON()
-			WWM.models.video.set model.toJSON()
+			vid = model.toJSON()
+			console.log 'Selected: ', vid
+			delete vid._id
+			WWM.models.video.set vid
 
 		@chatView = new Chat.View
 			el: @$('.chat-view')

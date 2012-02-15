@@ -73,8 +73,10 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 		return callback "error creating session" if err
 
 		sess = @sessions[sess.docid] = new WatchSession.One(sess, @skullServer)
-			
-		callback null, sess
+
+		await sess.init defer(err)
+
+		callback err, sess
 	
 	getSession: (docid, callback) ->
 

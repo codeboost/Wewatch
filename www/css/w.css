@@ -24,6 +24,7 @@
 
 .search-view input{
 	margin-bottom: 0px;
+	width: 240px;
 }
 
 .search-item {
@@ -138,7 +139,11 @@
 
 
 
-
+.chat-view .messages{
+	list-style: none;
+	max-height: 200px;
+	overflow-y: auto;
+}
 
 
 

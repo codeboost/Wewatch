@@ -51,27 +51,9 @@ class UserModel extends Skull.Model
 		@emit 'broadcast', data, socket
 
 	
-class VideoModel extends Skull.Model
-	constructor: ->
-		@video = {
-			url: ''
-			paused: false
-			position: 0
-			_id: 'v01'
-			owner: ''
-		}
-
-	read: (filter, callback, socket) ->
-		console.log 'Video Read: ', @video
-		callback null, @video
-			
-	update: (data, callback, socket) ->
-		console.log 'Video update', data
-		@video = data
-		callback null, data
-		@emit 'update', data, socket
-
-
+class VideoModel extends MSkull.Model
+	constructor: (id_session) ->
+		super 'CurVideo', id_session: id_session
 
 exports.Model = class SessionModel extends MSkull.XModel
 	constructor: ->
@@ -81,17 +63,30 @@ exports.One = class WatchSession extends Session.Session
 	constructor: (@options, @skullServer) ->
 		super
 		@users = new UserModel
-		@video = new VideoModel
-		@playlist = new PlaylistItem(@options._id)
+		@video = new VideoModel @options._id
+		@playlist = new PlaylistItem @options._id
 
 		@ns = @skullServer.of '' + @options._id
 		@ns.addModel '/users', @users
 		@ns.addModel '/video', @video
 		@ns.addModel '/playlist', @playlist
 		console.log 'Created watch session ', @id
+	
+	init: (callback) ->
+		#check if we already have a record
+		await @video.read {}, defer(err, videos)
+		vid = videos?[0]
+		console.log 'Video read: ', vid
 
-		@video.video.owner = @options.creator
-		@video.video.url = @options.url
+		return callback null if vid
+		console.log 'Initialized new video'
+		#create default video record
+		await @video.create 
+			url: @options.url
+			owner: @options.creator
+		, defer(err) 
+
+		callback err
 
 	addUser: (socket, callback) ->
 		user = socket.handshake.user
@@ -133,24 +128,31 @@ exports.One = class WatchSession extends Session.Session
 
 
 	bootstrap: (callback) ->
-		
+		await @video.read {}, defer(err, videos)
 		await @playlist.read {}, defer(err, playlist) 
 		await @users.read {}, defer(err, users)
+
+
+
 
 		ret = 
 			playlist: playlist
 			users: users
-			video: @video.video
+			video: videos[0]
 
 		callback null, ret
 
-	data: ->
+	data: (callback) ->
+		console.log 'Reading data.'
+		await @video.read {}, defer(err, videos)
+		video = videos[0]
+		console.log 'READ DATA: ', video
 		res = 
 			docid: @options.docid
 			_id: @options._id
-			video: @video.video
+			video: video
 			creator: @options.creator
-		res
+		callback null, res
 
 
 

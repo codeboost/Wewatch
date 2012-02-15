@@ -16,6 +16,7 @@ block scripts
 
 	- if(isProduction){
 		script(src='/compiled.min.js')
+		script(src='/vendor/bootstrap-modal.js')		
 	- } else {
 		script(src='/vendor/jquery-1.7.1.min.js')
 		//script(src='/vendor/zepto.min.js')
@@ -38,9 +39,7 @@ block scripts
 		script(src='/js/app.js')	
 		- }
 	script
-		require('app').start();
-
-			
+		require('app').start();	
 block content
 	.row.connection-view(style='display: none')
 		.span8
@@ -49,7 +48,7 @@ block content
 				.alert-body Lost connection to server. Hold on while I try to re-establish the connection.
 	.row
 		.span4
-			h3.video-title Title
+			h3.video-title &nbsp;
 		.span4
 			a.fb-share-button(name='fb_share', type='button')
 			a.twitter-share-button(href="https://twitter.com/share", data-count="none") Tweet
@@ -67,10 +66,7 @@ block content
 			.chat-view
 				.row
 					.span8
-						| Enter message:
-				.row
-					.span8
-						input.chat-message(type='text', name='chat-message', style='width: 100%')
+						input.chat-message(type='text', name='chat-message', style='width: 99%', placeholder='Type chat message and press enter')
 				.row
 					.span8
 						ul.messages.items

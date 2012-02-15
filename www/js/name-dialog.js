@@ -1,7 +1,8 @@
 (function() {
   var NameDialog, UserModel, g_Dialog, _ref,
     __hasProp = Object.prototype.hasOwnProperty,
-    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; },
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; };
 
   if ((_ref = window.module) != null) _ref.enter('name-dialog');
 
@@ -22,27 +23,37 @@
     __extends(NameDialog, _super);
 
     function NameDialog() {
+      this.submitForm = __bind(this.submitForm, this);
       NameDialog.__super__.constructor.apply(this, arguments);
     }
 
     NameDialog.prototype.initialize = function() {
       var _this = this;
       this.setElement($('#name-dialog'));
+      this.input = this.$('[name=user-name]');
+      this.input.keyup(function(e) {
+        if (e.keyCode === 13) return _this.submitForm();
+      });
       return this.$('.btn.primary').click(function(e) {
-        var name;
-        console.log('Clicked');
-        name = $.trim(_this.$('[name=user-name]').val());
-        return $.post('/setName', {
+        return console.log('Clicked');
+      });
+    };
+
+    NameDialog.prototype.submitForm = function() {
+      var name,
+        _this = this;
+      name = _.escape($.trim(this.input.val()));
+      if (!name.length) return;
+      return $.post('/setName', {
+        name: name
+      }, function(err, resp) {
+        _this.model.set({
           name: name
-        }, function(err, resp) {
-          _this.model.set({
-            name: name
-          });
-          if (typeof _this.callback === "function") {
-            _this.callback(_this.model.toJSON());
-          }
-          return _this.$el.modal('hide');
         });
+        if (typeof _this.callback === "function") {
+          _this.callback(_this.model.toJSON());
+        }
+        return _this.$el.modal('hide');
       });
     };
 

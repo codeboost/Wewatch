@@ -56,9 +56,8 @@
 
     VideoInfo.prototype.update = function() {
       var viewCount;
-      this.title.text(this.model.get('title'));
       viewCount = this.model.get('viewCount');
-      viewCount = viewCount ? viewCount + ' views' : ' ';
+      viewCount = viewCount ? viewCount + ' views' : '0';
       return this.totalViews.text(viewCount);
     };
 
@@ -120,8 +119,11 @@
         el: this.$('.playlist-view')
       });
       this.playlistView.collection.bind('selected', function(model) {
-        console.log('Selected: ', model.toJSON());
-        return WWM.models.video.set(model.toJSON());
+        var vid;
+        vid = model.toJSON();
+        console.log('Selected: ', vid);
+        delete vid._id;
+        return WWM.models.video.set(vid);
       });
       this.chatView = new Chat.View({
         el: this.$('.chat-view'),

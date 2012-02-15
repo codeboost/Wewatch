@@ -73,8 +73,9 @@ exports.init = (viewsDir) ->
 			creator: req.session.user._id
 		, defer(err, sess) 
 
-		data = sess.data()
+		await sess.data defer(err, data)
 
+		console.log 'Session data: ', data
 		req.session.user.sessionId = data.docid
 		
 		await req.session.save defer(err) 
@@ -89,11 +90,11 @@ exports.init = (viewsDir) ->
 		
 		return res.send 'No such session' if err isnt null or session is null
 		
-		session = session.data()
+		await session.data defer(err, data)
 
-		console.log 'Rendering session...', session
+		console.log 'Rendering session...', data
 		res.render 'w', 	
-			session: session
+			session: data
 			user: req.session.user
 
 	app.post '/setName', setUser, (req, res) ->

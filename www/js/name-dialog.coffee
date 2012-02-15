@@ -5,16 +5,24 @@ class UserModel extends Backbone.Model
 class NameDialog extends Backbone.View
 	initialize: ->
 		@setElement $('#name-dialog')
+		@input = @$('[name=user-name]')
+
+		@input.keyup (e) =>
+			@submitForm() if e.keyCode == 13
 
 		@$('.btn.primary').click (e) =>
 			console.log 'Clicked'
 
-			name = $.trim @$('[name=user-name]').val()
 
-			$.post '/setName',  {name: name}, (err, resp) =>
-				@model.set name: name
-				@callback? (@model.toJSON())
-				@$el.modal('hide')
+	submitForm: =>
+
+		name = _.escape $.trim @input.val()
+		return unless name.length 
+
+		$.post '/setName',  {name: name}, (err, resp) =>
+			@model.set name: name
+			@callback? (@model.toJSON())
+			@$el.modal('hide')
 
 
 	render: ->
