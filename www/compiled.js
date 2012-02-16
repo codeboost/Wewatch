@@ -4622,6 +4622,8 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 
   WWM.initialized = false;
 
+  WWM.paused = false;
+
   VideoInfo = (function(_super) {
 
     __extends(VideoInfo, _super);
@@ -4643,11 +4645,31 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     };
 
     VideoInfo.prototype.updateViewers = function() {
-      return this.viewers.text(this.options.usersModel.length + ' viewers');
+      var active, fnReduce, total;
+      total = this.options.usersModel.length;
+      fnReduce = function(memo, item) {
+        if (item.get('idle')) {
+          return memo;
+        } else {
+          return memo + 1;
+        }
+      };
+      active = this.options.usersModel.reduce(fnReduce, 0);
+      return this.viewers.text(active + '/' + total + ' viewers');
     };
 
     VideoInfo.prototype.update = function() {
-      var viewCount;
+      var presenter, ret, viewCount, _ref2, _ref3;
+      if (WWM.isModerator) {
+        this.title.text('You are presenting');
+        this.$('.search-view').show();
+      } else {
+        ret = this.options.usersModel.filter(function(usr) {
+          return WWM.session.creator === usr.get('id_user');
+        });
+        presenter = (_ref2 = ret != null ? (_ref3 = ret[0]) != null ? _ref3.get('name') : void 0 : void 0) != null ? _ref2 : 'No one';
+        this.title.text(presenter + ' is presenting');
+      }
       viewCount = this.model.get('viewCount');
       viewCount = viewCount ? viewCount + ' views' : '0';
       return this.totalViews.text(viewCount);
@@ -4712,6 +4734,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       });
       this.playlistView.collection.bind('selected', function(model) {
         var vid;
+        if (!WWM.isModerator) return;
         vid = model.toJSON();
         console.log('Selected: ', vid);
         delete vid._id;
@@ -4726,6 +4749,34 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       });
       WWM.models.chat.bind('new-msg', function(data) {
         return WWM.models.users.broadcast(data);
+      });
+      $(window).blur(function() {
+        var myModel, _ref2;
+        myModel = WWM.models.users.filter(function(viewer) {
+          return viewer.get('id_user') === WWM.user._id;
+        });
+        if (myModel != null) {
+          if ((_ref2 = myModel[0]) != null) {
+            _ref2.save({
+              idle: true
+            });
+          }
+        }
+        return WWM.idle = true;
+      });
+      $(window).focus(function() {
+        var myModel, _ref2;
+        myModel = WWM.models.users.filter(function(viewer) {
+          return viewer.get('id_user') === WWM.user._id;
+        });
+        if (myModel != null) {
+          if ((_ref2 = myModel[0]) != null) {
+            _ref2.save({
+              idle: false
+            });
+          }
+        }
+        return WWM.idle = false;
       });
       this.playlistView.render();
       return WWM.initialized = true;
@@ -4757,14 +4808,17 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
   window.onYouTubePlayerAPIReady = function() {
     WWM.conn = new ioState.ConnectionState;
     WWM.conn.bind('joined', function(bootstrap) {
-      var globalNS, _ref2;
-      globalNS = Skull.createClient(WWM.conn.sio.of(WWM.session._id));
+      var globalNS, ns, _ref2;
+      ns = WWM.conn.sio.of(WWM.session._id);
+      ns.emit('hello world');
+      globalNS = Skull.createClient(ns);
       require('models').init(globalNS, bootstrap);
       if (WWM.initialized) return;
       if ((_ref2 = WWM.user.name) != null ? _ref2.length : void 0) {
         return (new AppView).show();
       }
       return NameDialog.show(function(mdl) {
+        WWM.user.name = mdl.name;
         return (new AppView).show();
       });
     });
@@ -4879,10 +4933,11 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
         if (!txt.length) return;
         data = {
           from: WWM.user.name,
-          message: _.escape(txt)
+          message: txt
         };
-        this.collection.add(data);
         this.collection.trigger('new-msg', data);
+        data.message = _.escape(txt);
+        this.collection.add(data);
         return this.chatInput.val('');
       }
     };
@@ -4894,25 +4949,43 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 }).call(this);
 
 }, "index": function(exports, require, module) {(function() {
+  var utils;
+
+  utils = require('utils');
 
   $(function() {
     var urlInput;
     urlInput = $('[name=url]');
     $('.you').submit(function(e) {
-      var val;
+      var val, videoId;
       val = urlInput.val();
-      if (!val.match(/^http:\/\/(?:www\.)?youtube.com\/watch\?(?=.*v=(.{11}))/)) {
-        $('.err-message').removeClass('hidden');
+      if (!utils.isYoutubeUrl(val)) {
+        $('.err-message').removeClass('hidden').text("Not a valid youtube URL");
         e.preventDefault();
-        return false;
+        false;
       }
+      videoId = utils.extractVideoId(val);
+      $.getJSON('https://gdata.youtube.com/feeds/api/videos/' + videoId + '?v=2&alt=jsonc&callback=?', function(resp, textStatus) {
+        var item;
+        if (textStatus === 'success') {
+          item = utils.extractItemAttributes(resp.data);
+          item.url = val;
+          return $.post('/createSession', item, function(resp, textStatus) {
+            if (resp != null ? resp.sessionId : void 0) {
+              return window.location = '/w/' + resp.sessionId;
+            } else {
+              return $('.err-message').removeClass('hidden').text("Error creating session");
+            }
+          });
+        }
+      });
+      e.preventDefault();
+      return false;
     });
     return urlInput.keyup(function() {
       var val;
       val = urlInput.val();
-      if (val.match(/^http:\/\/(?:www\.)?youtube.com\/watch\?(?=.*v=(.{11}))/)) {
-        return $('.err-message').addClass('hidden');
-      }
+      if (utils.isYoutubeUrl(val)) return $('.err-message').addClass('hidden');
     });
   });
 
@@ -5257,7 +5330,9 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       if (this.model.get('paused')) {
         if (!this.player.isPaused()) return this.player.pauseVideo();
       } else {
-        if (!this.player.isPlaying()) return this.player.playVideo();
+        if (!(this.player.isPlaying() && !WWM.idle)) {
+          return this.player.playVideo();
+        }
       }
     };
 
@@ -5279,6 +5354,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     };
 
     PlayerView.prototype.seek = function() {
+      if (WWM.idle) return;
       return this.player.seekTo(this.model.get('position'), true);
     };
 
@@ -5635,7 +5711,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
         if (txt !== this.lastText) {
           this.lastText = txt;
           clearTimeout(this.searchTimer);
-          return this.searchTimer = setTimeout(this.performSearch, 250);
+          return this.searchTimer = setTimeout(this.performSearch, 750);
         } else {
           return this.showSearchResults();
         }
@@ -5686,11 +5762,8 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
         });
       } else {
         return $.getJSON('https://gdata.youtube.com/feeds/api/videos?q=' + txt + '&v=2&alt=jsonc&callback=?', function(resp, textStatus) {
-          var item, items, nr, _ref2;
+          var fn, item, items, total, _ref2;
           if (textStatus === 'success' && (resp != null ? (_ref2 = resp.data) != null ? _ref2.totalItems : void 0 : void 0)) {
-            nr = _.filter(resp.data.items, function(item) {
-              return !item.restrictions;
-            });
             items = (function() {
               var _i, _len, _ref3, _results;
               _ref3 = resp.data.items;
@@ -5701,6 +5774,11 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
               }
               return _results;
             }).call(_this);
+            fn = function(n, item) {
+              return n + item.viewCount;
+            };
+            total = _.reduce(resp.data.items, fn, 0);
+            console.log('Total Views: ', total);
             _this.collection.reset(items);
             return _this.showSearchResults();
           } else {
@@ -6087,11 +6165,13 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     if ((_ref = window.module) != null) _ref.enter('utils');
   }
 
-  _.templateSettings = {
-    escape: /\{\{(.+?)\}\}/g,
-    interpolate: /\{\-\{(.+?)\}\}/g,
-    evaluate: /\{\=\{(.+?)\}\}/g
-  };
+  if (typeof _ !== "undefined" && _ !== null) {
+    _.templateSettings = {
+      escape: /\{\{(.+?)\}\}/g,
+      interpolate: /\{\-\{(.+?)\}\}/g,
+      evaluate: /\{\=\{(.+?)\}\}/g
+    };
+  }
 
   exports.loadTemplate = function(name) {
     name = name[0] === '#' ? name : '#' + name;
@@ -6109,6 +6189,19 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
   exports.extractVideoId = function(url) {
     var _ref2;
     return (_ref2 = url.match(/v=(.{11})/)) != null ? _ref2[1] : void 0;
+  };
+
+  exports.extractItemAttributes = function(item) {
+    var ret;
+    ret = {
+      thumbnail: item.thumbnail.sqDefault,
+      title: item.title,
+      viewCount: item.viewCount,
+      uploader: item.uploader,
+      url: item.url,
+      videoId: item.id
+    };
+    return ret;
   };
 
 }).call(this);
