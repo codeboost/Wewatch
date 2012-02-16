@@ -116,7 +116,7 @@ exports.View = class SearchView extends Backbone.View
 			if txt != @lastText
 				@lastText = txt
 				clearTimeout @searchTimer
-				@searchTimer = setTimeout @performSearch, 250
+				@searchTimer = setTimeout @performSearch, 750
 			else
 				@showSearchResults()
 		else
@@ -161,7 +161,13 @@ exports.View = class SearchView extends Backbone.View
 		else
 			$.getJSON 'https://gdata.youtube.com/feeds/api/videos?q=' + txt + '&v=2&alt=jsonc&callback=?', (resp, textStatus) =>
 				if textStatus == 'success' and resp?.data?.totalItems
-				items = (@extractAttributes(item) for item in resp.data.items)
+					items = (@extractAttributes(item) for item in resp.data.items)
+
+					fn = (n, item) -> n + item.viewCount  
+					total = _.reduce resp.data.items, fn, 0
+
+					console.log 'Total Views: ', total
+
 					@collection.reset items
 					@showSearchResults()
 				else

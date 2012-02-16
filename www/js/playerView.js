@@ -74,7 +74,9 @@
       if (this.model.get('paused')) {
         if (!this.player.isPaused()) return this.player.pauseVideo();
       } else {
-        if (!this.player.isPlaying()) return this.player.playVideo();
+        if (!(this.player.isPlaying() && !WWM.idle)) {
+          return this.player.playVideo();
+        }
       }
     };
 
@@ -96,6 +98,7 @@
     };
 
     PlayerView.prototype.seek = function() {
+      if (WWM.idle) return;
       return this.player.seekTo(this.model.get('position'), true);
     };
 

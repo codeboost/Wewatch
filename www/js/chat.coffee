@@ -52,8 +52,13 @@ exports.View = class ChatView extends Backbone.View
 				 
 			data = 
 				from: WWM.user.name
-				message: _.escape txt
+				message: txt
 
-			@collection.add data
+			#send to server, unescaped. Server escapes it.
 			@collection.trigger 'new-msg', data
+			
+			#add escaped version to the collection
+			data.message = _.escape txt
+			@collection.add data
+
 			@chatInput.val('')

@@ -27,6 +27,7 @@ class exports.PlayerView extends Backbone.View
 
 		@player.bind 'paused', =>
 			console.log '~ Paused'
+
 		 @delaySaveState()
 
 		@player.bind 'seeked', =>
@@ -53,13 +54,12 @@ class exports.PlayerView extends Backbone.View
 		if @model.get 'paused' 
 			@player.pauseVideo() unless @player.isPaused()
 		else
-			@player.playVideo() unless @player.isPlaying()
+			@player.playVideo() unless @player.isPlaying() and not WWM.idle
 		
 	changeUrl: =>
-
 		console.log 'Change URL: ' + @model.get('url') + ' -> ' + @model.get('position')
-
 		videoId = utils.extractVideoId @model.get 'url'
+
 		if videoId
 			@changingURL = true
 			@player.cueVideoById videoId, @model.get('position')
@@ -73,4 +73,5 @@ class exports.PlayerView extends Backbone.View
 		@seek()
 		
 	seek: =>
+		return if WWM.idle
 		@player.seekTo @model.get('position'), true

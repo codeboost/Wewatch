@@ -1,6 +1,8 @@
 extends layout
 block scripts
 	script(src='/vendor/jquery-1.7.1.min.js')
+	script(src='/vendor/module.js')
+	script(src='/js/utils.js')
 	script(src='/js/index.js')
 block content
 	section(id='url')
@@ -12,7 +14,7 @@ block content
 				.row
 					form.you(action='createSession', method='post')
 						.span8
-							input.span8(type='text', name='url', style='height: 25px; font-size: 20px;', value='http://www.youtube.com/watch?v=Q0xMLDwDImI') 
+							input.span8(type='text', name='url', style='height: 25px; font-size: 20px;') 
 						.span4						
 							button.btn.large.primary(type='submit') Watch!
 				.row.err-message.hidden

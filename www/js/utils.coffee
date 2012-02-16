@@ -1,6 +1,6 @@
 window?.module?.enter 'utils'
 
-_.templateSettings = {
+_?.templateSettings = {
   escape : /\{\{(.+?)\}\}/g
 	interpolate: /\{\-\{(.+?)\}\}/g
 	evaluate: /\{\=\{(.+?)\}\}/g
@@ -18,3 +18,13 @@ exports.isYoutubeUrl = (val) ->
 
 exports.extractVideoId = (url) ->
 	url.match(/v=(.{11})/)?[1]
+
+exports.extractItemAttributes = (item) ->
+	ret = 
+		thumbnail: item.thumbnail.sqDefault
+		title: item.title
+		viewCount: item.viewCount
+		uploader: item.uploader
+		url: item.url
+		videoId: item.id
+	return ret	

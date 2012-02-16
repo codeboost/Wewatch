@@ -30,6 +30,8 @@
 
   WWM.initialized = false;
 
+  WWM.paused = false;
+
   VideoInfo = (function(_super) {
 
     __extends(VideoInfo, _super);
@@ -51,11 +53,31 @@
     };
 
     VideoInfo.prototype.updateViewers = function() {
-      return this.viewers.text(this.options.usersModel.length + ' viewers');
+      var active, fnReduce, total;
+      total = this.options.usersModel.length;
+      fnReduce = function(memo, item) {
+        if (item.get('idle')) {
+          return memo;
+        } else {
+          return memo + 1;
+        }
+      };
+      active = this.options.usersModel.reduce(fnReduce, 0);
+      return this.viewers.text(active + '/' + total + ' viewers');
     };
 
     VideoInfo.prototype.update = function() {
-      var viewCount;
+      var presenter, ret, viewCount, _ref2, _ref3;
+      if (WWM.isModerator) {
+        this.title.text('You are presenting');
+        this.$('.search-view').show();
+      } else {
+        ret = this.options.usersModel.filter(function(usr) {
+          return WWM.session.creator === usr.get('id_user');
+        });
+        presenter = (_ref2 = ret != null ? (_ref3 = ret[0]) != null ? _ref3.get('name') : void 0 : void 0) != null ? _ref2 : 'No one';
+        this.title.text(presenter + ' is presenting');
+      }
       viewCount = this.model.get('viewCount');
       viewCount = viewCount ? viewCount + ' views' : '0';
       return this.totalViews.text(viewCount);
@@ -120,6 +142,7 @@
       });
       this.playlistView.collection.bind('selected', function(model) {
         var vid;
+        if (!WWM.isModerator) return;
         vid = model.toJSON();
         console.log('Selected: ', vid);
         delete vid._id;
@@ -134,6 +157,34 @@
       });
       WWM.models.chat.bind('new-msg', function(data) {
         return WWM.models.users.broadcast(data);
+      });
+      $(window).blur(function() {
+        var myModel, _ref2;
+        myModel = WWM.models.users.filter(function(viewer) {
+          return viewer.get('id_user') === WWM.user._id;
+        });
+        if (myModel != null) {
+          if ((_ref2 = myModel[0]) != null) {
+            _ref2.save({
+              idle: true
+            });
+          }
+        }
+        return WWM.idle = true;
+      });
+      $(window).focus(function() {
+        var myModel, _ref2;
+        myModel = WWM.models.users.filter(function(viewer) {
+          return viewer.get('id_user') === WWM.user._id;
+        });
+        if (myModel != null) {
+          if ((_ref2 = myModel[0]) != null) {
+            _ref2.save({
+              idle: false
+            });
+          }
+        }
+        return WWM.idle = false;
       });
       this.playlistView.render();
       return WWM.initialized = true;
@@ -165,14 +216,17 @@
   window.onYouTubePlayerAPIReady = function() {
     WWM.conn = new ioState.ConnectionState;
     WWM.conn.bind('joined', function(bootstrap) {
-      var globalNS, _ref2;
-      globalNS = Skull.createClient(WWM.conn.sio.of(WWM.session._id));
+      var globalNS, ns, _ref2;
+      ns = WWM.conn.sio.of(WWM.session._id);
+      ns.emit('hello world');
+      globalNS = Skull.createClient(ns);
       require('models').init(globalNS, bootstrap);
       if (WWM.initialized) return;
       if ((_ref2 = WWM.user.name) != null ? _ref2.length : void 0) {
         return (new AppView).show();
       }
       return NameDialog.show(function(mdl) {
+        WWM.user.name = mdl.name;
         return (new AppView).show();
       });
     });

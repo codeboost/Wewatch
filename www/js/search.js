@@ -182,7 +182,7 @@
         if (txt !== this.lastText) {
           this.lastText = txt;
           clearTimeout(this.searchTimer);
-          return this.searchTimer = setTimeout(this.performSearch, 250);
+          return this.searchTimer = setTimeout(this.performSearch, 750);
         } else {
           return this.showSearchResults();
         }
@@ -233,11 +233,8 @@
         });
       } else {
         return $.getJSON('https://gdata.youtube.com/feeds/api/videos?q=' + txt + '&v=2&alt=jsonc&callback=?', function(resp, textStatus) {
-          var item, items, nr, _ref2;
+          var fn, item, items, total, _ref2;
           if (textStatus === 'success' && (resp != null ? (_ref2 = resp.data) != null ? _ref2.totalItems : void 0 : void 0)) {
-            nr = _.filter(resp.data.items, function(item) {
-              return !item.restrictions;
-            });
             items = (function() {
               var _i, _len, _ref3, _results;
               _ref3 = resp.data.items;
@@ -248,6 +245,11 @@
               }
               return _results;
             }).call(_this);
+            fn = function(n, item) {
+              return n + item.viewCount;
+            };
+            total = _.reduce(resp.data.items, fn, 0);
+            console.log('Total Views: ', total);
             _this.collection.reset(items);
             return _this.showSearchResults();
           } else {

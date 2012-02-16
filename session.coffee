@@ -13,7 +13,10 @@ exports.SessionManager = class SessionManager
 	
 	constructor: (app) ->
 		SM = this
+
 		@io = io.listen app
+		@io.set 'transports', ['websocket', 'flashsocket', 'htmlfile','xhr-polling','jsonp-polling']
+
 		@io.set 'authorization', (data, callback) ->
 			res = {}
 			await express.cookieParser() data, res, defer()

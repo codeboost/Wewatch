@@ -18,6 +18,7 @@ WWM.isModerator = WWM.session.creator == WWM.user._id
 
 #flag is true when the views have been created
 WWM.initialized = false
+WWM.paused = false
 
 
 class VideoInfo extends Backbone.View
@@ -34,10 +35,28 @@ class VideoInfo extends Backbone.View
 		@updateViewers()
 
 	updateViewers: =>
-		@viewers.text @options.usersModel.length + ' viewers'
+		total = @options.usersModel.length
+
+		fnReduce = (memo, item) ->
+			if item.get('idle') then memo else return memo + 1
+
+		active = @options.usersModel.reduce fnReduce, 0
+
+		@viewers.text active + '/' + total + ' viewers'
 
 	update: =>
-		#@title.text @model.get 'title'
+		
+
+		if WWM.isModerator
+			@title.text 'You are presenting'
+			@$('.search-view').show()
+		else
+
+			ret = @options.usersModel.filter (usr) -> WWM.session.creator == usr.get('id_user')
+
+			presenter = ret?[0]?.get('name') ? 'No one'
+
+			@title.text presenter + ' is presenting'
 
 		viewCount = @model.get('viewCount')
 		viewCount = if viewCount then viewCount + ' views' else '0'
@@ -77,10 +96,11 @@ class AppView extends Backbone.View
 			el: @$('.playlist-view')
 		
 		@playlistView.collection.bind 'selected', (model) ->
+			return unless WWM.isModerator
 			vid = model.toJSON()
 			console.log 'Selected: ', vid
 			delete vid._id
-			WWM.models.video.set vid
+			WWM.models.video.set vid 
 
 		@chatView = new Chat.View
 			el: @$('.chat-view')
@@ -93,6 +113,17 @@ class AppView extends Backbone.View
 		#new-msg means *current* user typed in something
 		WWM.models.chat.bind 'new-msg', (data) ->
 			WWM.models.users.broadcast data
+
+		$(window).blur ->
+			myModel = WWM.models.users.filter (viewer) -> viewer.get('id_user') == WWM.user._id
+			myModel?[0]?.save idle: true
+			WWM.idle = true
+
+		$(window).focus ->
+			myModel = WWM.models.users.filter (viewer) -> viewer.get('id_user') == WWM.user._id
+			myModel?[0]?.save idle: false
+			WWM.idle = false
+
 
 		@playlistView.render()
 
@@ -117,7 +148,11 @@ window.onYouTubePlayerAPIReady = ->
 	WWM.conn = new ioState.ConnectionState
 	WWM.conn.bind 'joined', (bootstrap) ->
 
-			globalNS = Skull.createClient WWM.conn.sio.of(WWM.session._id)
+			ns = WWM.conn.sio.of(WWM.session._id)
+
+			ns.emit 'hello world'
+
+			globalNS = Skull.createClient ns
 			require('models').init(globalNS, bootstrap)
 
 			if WWM.initialized 
@@ -127,6 +162,7 @@ window.onYouTubePlayerAPIReady = ->
 				return (new AppView).show()
 
 			NameDialog.show (mdl) ->
+				WWM.user.name = mdl.name
 				(new AppView).show()
 	
 	WWM.conn.join WWM.session.docid

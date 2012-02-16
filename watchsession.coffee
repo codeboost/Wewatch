@@ -80,11 +80,26 @@ exports.One = class WatchSession extends Session.Session
 
 		return callback null if vid
 		console.log 'Initialized new video'
+		
 		#create default video record
 		await @video.create 
 			url: @options.url
 			owner: @options.creator
+			title: @options.title
+			viewCount: @options.viewCount
+			uploader: @options.uploader
 		, defer(err) 
+
+		await @playlist.create
+			url: @options.url
+			owner: @options.creator
+			title: @options.title
+			thumbnail: @options.thumbnail
+			viewCount: @options.viewCount
+			uploader: @options.uploader
+			videoId: @options.videoId
+			position: 0
+			paused: false
 
 		callback err
 

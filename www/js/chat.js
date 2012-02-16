@@ -98,10 +98,11 @@
         if (!txt.length) return;
         data = {
           from: WWM.user.name,
-          message: _.escape(txt)
+          message: txt
         };
-        this.collection.add(data);
         this.collection.trigger('new-msg', data);
+        data.message = _.escape(txt);
+        this.collection.add(data);
         return this.chatInput.val('');
       }
     };

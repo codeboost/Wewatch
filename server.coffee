@@ -68,10 +68,14 @@ exports.init = (viewsDir) ->
 		res.render 'index'
 
 	app.post '/createSession', setUser, (req, res) ->
-		await g_Server.createSession 
-			url: req.body.url
-			creator: req.session.user._id
-		, defer(err, sess) 
+		params = req.body
+		params.creator = req.session.user._id
+
+		console.log 'Create session params: ', params
+		
+		return unless params.url and params.title
+
+		await g_Server.createSession params, defer(err, sess) 
 
 		await sess.data defer(err, data)
 
@@ -80,7 +84,8 @@ exports.init = (viewsDir) ->
 		
 		await req.session.save defer(err) 
 
-		res.redirect "/w/#{data.docid}"
+		#res.redirect "/w/#{data.docid}"
+		res.send sessionId: data.docid
 
 	app.get '/w/:id', setUser, (req, res) ->
 		return res.send 500 unless req.session.user
