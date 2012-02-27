@@ -4591,7 +4591,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
   }
   return this.require.define;
 }).call(this)({"app": function(exports, require, module) {(function() {
-  var AppView, Chat, ConnectionView, NameDialog, PlayerView, Playlist, Skull, VideoInfo, createYTFrame, ioState, updateModels, _ref,
+  var AppView, Bookmarks, Chat, ConnectionView, NameDialog, PlayerView, Playlist, RighSide, Skull, VideoInfo, createYTFrame, ioState, updateModels, _ref,
     __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
@@ -4610,6 +4610,8 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 
   Chat = require('chat');
 
+  Bookmarks = require('bookmarks');
+
   try {
     Skull = require('skull-client');
   } catch (e) {
@@ -4623,6 +4625,64 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
   WWM.initialized = false;
 
   WWM.paused = false;
+
+  RighSide = (function(_super) {
+
+    __extends(RighSide, _super);
+
+    function RighSide() {
+      this.render = __bind(this.render, this);
+      this.selectPlaylist = __bind(this.selectPlaylist, this);
+      this.selectBookmarks = __bind(this.selectBookmarks, this);
+      RighSide.__super__.constructor.apply(this, arguments);
+    }
+
+    RighSide.prototype.events = {
+      'click .select-bookmarks': 'selectBookmarks',
+      'click .select-playlist': 'selectPlaylist'
+    };
+
+    RighSide.prototype.initialize = function() {
+      this.playlist = new Playlist.View({
+        collection: WWM.models.playlist,
+        el: this.$('.playlist-view')
+      });
+      this.bookmarks = new Bookmarks.View({
+        collection: WWM.models.bookmarks,
+        el: this.$('.bookmarks-view')
+      });
+      this.tabs = {
+        bookmarks: this.$('.select-bookmarks'),
+        playlist: this.$('.select-playlist')
+      };
+      return this.curView = this.playlist;
+    };
+
+    RighSide.prototype.selectBookmarks = function(e) {
+      if (e != null) e.preventDefault();
+      this.playlist.$el.hide();
+      this.bookmarks.$el.show();
+      this.tabs.bookmarks.addClass('active');
+      this.tabs.playlist.removeClass('active');
+      return this.curView = this.bookmarks;
+    };
+
+    RighSide.prototype.selectPlaylist = function(e) {
+      if (e != null) e.preventDefault();
+      this.bookmarks.$el.hide();
+      this.playlist.$el.show();
+      this.tabs.bookmarks.removeClass('active');
+      this.tabs.playlist.addClass('active');
+      return this.curView = this.playlist;
+    };
+
+    RighSide.prototype.render = function() {
+      return this.curView.render();
+    };
+
+    return RighSide;
+
+  })(Backbone.View);
 
   VideoInfo = (function(_super) {
 
@@ -4663,6 +4723,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       if (WWM.isModerator) {
         this.title.text('You are presenting');
         this.$('.search-view').show();
+        this.$('.right-side').show();
       } else {
         ret = this.options.usersModel.filter(function(usr) {
           return WWM.session.creator === usr.get('id_user');
@@ -4714,6 +4775,11 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       AppView.__super__.constructor.apply(this, arguments);
     }
 
+    AppView.prototype.events = {
+      'click .mark-in': 'markIn',
+      'click .mark-out': 'markOut'
+    };
+
     AppView.prototype.initialize = function() {
       this.setElement($('#main-container'));
       this.connectionView = new ConnectionView({
@@ -4728,27 +4794,12 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       this.playerView = new PlayerView.PlayerView({
         model: WWM.models.video
       });
-      this.playlistView = new Playlist.View({
-        collection: WWM.models.playlist,
-        el: this.$('.playlist-view')
-      });
-      this.playlistView.collection.bind('selected', function(model) {
-        var vid;
-        if (!WWM.isModerator) return;
-        vid = model.toJSON();
-        console.log('Selected: ', vid);
-        delete vid._id;
-        return WWM.models.video.set(vid);
+      this.rightSide = new RighSide({
+        el: this.$('.right-side')
       });
       this.chatView = new Chat.View({
         el: this.$('.chat-view'),
         collection: WWM.models.chat
-      });
-      WWM.models.users.bind('server-broadcast', function(data) {
-        return WWM.models.chat.add(data);
-      });
-      WWM.models.chat.bind('new-msg', function(data) {
-        return WWM.models.users.broadcast(data);
       });
       $(window).blur(function() {
         var myModel, _ref2;
@@ -4778,8 +4829,37 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
         }
         return WWM.idle = false;
       });
-      this.playlistView.render();
+      this.editButtons = {
+        markIn: this.$('.mark-in'),
+        markOut: this.$('.mark-out')
+      };
+      this.rightSide.render();
       return WWM.initialized = true;
+    };
+
+    AppView.prototype.markIn = function() {
+      var point;
+      if (!WWM.isModerator) return;
+      this.rightSide.selectBookmarks();
+      point = WWM.models.video.toJSON();
+      delete point._id;
+      point.position = this.playerView.player.getCurrentTime();
+      return this.lastPoint = WWM.models.bookmarks.create(point);
+    };
+
+    AppView.prototype.markOut = function() {
+      var curPos, len, startPos;
+      if (!WWM.isModerator) return;
+      if (!this.lastPoint) return;
+      this.rightSide.selectBookmarks();
+      startPos = this.lastPoint.get('position');
+      curPos = this.playerView.player.getCurrentTime();
+      len = curPos - startPos;
+      if (!(len > 0)) return;
+      this.lastPoint.save({
+        length: len
+      });
+      return this.lastPoint = null;
     };
 
     AppView.prototype.show = function() {
@@ -4790,6 +4870,26 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     return AppView;
 
   })(Backbone.View);
+
+  WWM.bindEvents = function() {
+    WWM.models.playlist.bind('selected', function(model) {
+      var vid;
+      if (!WWM.isModerator) return;
+      vid = model.toJSON();
+      console.log('Selected: ', vid);
+      delete vid._id;
+      return WWM.models.video.set(vid);
+    });
+    WWM.models.users.bind('server-broadcast', WWM.models.chat.add);
+    WWM.models.chat.bind('new-msg', WWM.models.users.broadcast);
+    return WWM.models.bookmarks.bind('selected', function(model) {
+      var vid;
+      if (!WWM.isModerator) return;
+      vid = model.toJSON();
+      delete vid._id;
+      return WWM.models.video.set(vid);
+    });
+  };
 
   createYTFrame = function() {
     var firstTag, tag;
@@ -4810,9 +4910,9 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     WWM.conn.bind('joined', function(bootstrap) {
       var globalNS, ns, _ref2;
       ns = WWM.conn.sio.of(WWM.session._id);
-      ns.emit('hello world');
       globalNS = Skull.createClient(ns);
       require('models').init(globalNS, bootstrap);
+      WWM.bindEvents();
       if (WWM.initialized) return;
       if ((_ref2 = WWM.user.name) != null ? _ref2.length : void 0) {
         return (new AppView).show();
@@ -4830,6 +4930,152 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       return createYTFrame();
     });
   };
+
+}).call(this);
+
+}, "bookmarks": function(exports, require, module) {(function() {
+  var ManyBookmarks, OneBookmarkItem, View, secondsToTime, utils, _ref,
+    __bind = function(fn, me){ return function(){ return fn.apply(me, arguments); }; },
+    __hasProp = Object.prototype.hasOwnProperty,
+    __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
+
+  if (typeof window !== "undefined" && window !== null) {
+    if ((_ref = window.module) != null) _ref.enter('bookmarks');
+  }
+
+  utils = require('utils');
+
+  secondsToTime = function(secs) {
+    var dvm, dvs, hours, mins, ret;
+    hours = Math.floor(secs / 3600);
+    dvm = secs % 3600;
+    mins = Math.floor(dvm / 60);
+    dvs = dvm % 60;
+    secs = Math.ceil(dvs);
+    return ret = {
+      h: hours,
+      m: mins,
+      s: secs
+    };
+  };
+
+  OneBookmarkItem = (function(_super) {
+
+    __extends(OneBookmarkItem, _super);
+
+    function OneBookmarkItem() {
+      this.render = __bind(this.render, this);
+      this.removeItem = __bind(this.removeItem, this);
+      OneBookmarkItem.__super__.constructor.apply(this, arguments);
+    }
+
+    OneBookmarkItem.prototype.tagName = 'tr';
+
+    OneBookmarkItem.prototype.className = 'play-item';
+
+    OneBookmarkItem.prototype.events = {
+      'click': 'itemClicked',
+      'click .remove': 'removeItem'
+    };
+
+    OneBookmarkItem.prototype.initialize = function() {
+      var _this = this;
+      this.template = utils.loadTemplate('one-bookmark-item');
+      this.model.bind('change', this.render);
+      return this.model.bind('remove', function() {
+        return _this.remove();
+      });
+    };
+
+    OneBookmarkItem.prototype.removeItem = function(e) {
+      e.preventDefault();
+      this.model.destroy();
+      return false;
+    };
+
+    OneBookmarkItem.prototype.itemClicked = function() {
+      return this.model.trigger('selected', this.model);
+    };
+
+    OneBookmarkItem.prototype.modelData = function() {
+      var st, sto, vid;
+      vid = this.model.toJSON();
+      st = secondsToTime(vid.position);
+      sto = [];
+      if (st.h > 0) sto.push(st.h);
+      sto.push(st.m);
+      sto.push(st.s);
+      vid.startTime = sto.join(':');
+      return vid;
+    };
+
+    OneBookmarkItem.prototype.render = function() {
+      $(this.el).html(this.template(this.modelData()));
+      return this;
+    };
+
+    return OneBookmarkItem;
+
+  })(Backbone.View);
+
+  ManyBookmarks = (function(_super) {
+
+    __extends(ManyBookmarks, _super);
+
+    function ManyBookmarks() {
+      this.render = __bind(this.render, this);
+      this.addAll = __bind(this.addAll, this);
+      this.addOne = __bind(this.addOne, this);
+      ManyBookmarks.__super__.constructor.apply(this, arguments);
+    }
+
+    ManyBookmarks.prototype.initialize = function() {
+      this.collection.bind('add', this.addOne);
+      return this.collection.bind('reset', this.addAll);
+    };
+
+    ManyBookmarks.prototype.addOne = function(item) {
+      var view;
+      view = new OneBookmarkItem({
+        model: item
+      });
+      return this.$el.append(view.render().el);
+    };
+
+    ManyBookmarks.prototype.addAll = function() {
+      this.$el.empty();
+      return this.collection.each(this.addOne);
+    };
+
+    ManyBookmarks.prototype.render = function() {
+      this.addAll();
+      return this;
+    };
+
+    return ManyBookmarks;
+
+  })(Backbone.View);
+
+  exports.View = View = (function(_super) {
+
+    __extends(View, _super);
+
+    function View() {
+      this.initialize = __bind(this.initialize, this);
+      View.__super__.constructor.apply(this, arguments);
+    }
+
+    View.prototype.initialize = function() {
+      this.bookmarks = new ManyBookmarks({
+        collection: this.collection,
+        el: this.$('.bookmarks')
+      });
+      return this.bookmarks.addAll();
+    };
+
+    return View;
+
+  })(Backbone.View);
 
 }).call(this);
 
@@ -4925,6 +5171,8 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       this.chatInput = this.$('[name=chat-message]');
       return this.messages.render();
     };
+
+    ChatView.prototype.resizeLayout = function() {};
 
     ChatView.prototype.onChatKeyUp = function(e) {
       var data, txt;
@@ -5042,7 +5290,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 }).call(this);
 
 }, "models": function(exports, require, module) {(function() {
-  var ChatLinesCollection, OneChatLine, PlayItem, Playlist, UserCollection, VideoModel, _ref,
+  var BookmarkItem, Bookmarks, ChatLinesCollection, OneChatLine, PlayItem, Playlist, UserCollection, VideoModel, _ref,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -5106,6 +5354,41 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 
   })(Skull.Collection);
 
+  BookmarkItem = (function(_super) {
+
+    __extends(BookmarkItem, _super);
+
+    function BookmarkItem() {
+      BookmarkItem.__super__.constructor.apply(this, arguments);
+    }
+
+    BookmarkItem.prototype.defaults = {
+      id_session: 0,
+      videoId: '',
+      start: 0,
+      length: 0
+    };
+
+    return BookmarkItem;
+
+  })(Skull.Model);
+
+  Bookmarks = (function(_super) {
+
+    __extends(Bookmarks, _super);
+
+    function Bookmarks() {
+      Bookmarks.__super__.constructor.apply(this, arguments);
+    }
+
+    Bookmarks.prototype.url = '/bookmarks';
+
+    Bookmarks.prototype.model = BookmarkItem;
+
+    return Bookmarks;
+
+  })(Skull.Collection);
+
   PlayItem = (function(_super) {
 
     __extends(PlayItem, _super);
@@ -5158,6 +5441,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     ((_ref4 = models.users) != null ? _ref4 : models.users = ns.addModel(new UserCollection)).reset(bootstrap.users);
     ((_ref5 = models.playlist) != null ? _ref5 : models.playlist = ns.addModel(new Playlist)).reset(bootstrap.playlist);
     if (models.chat == null) models.chat = new ChatLinesCollection;
+    (models.bookmarks = ns.addModel(new Bookmarks)).reset(bootstrap.bookmarks);
     return models;
   };
 
@@ -5286,7 +5570,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
       this.model.bind('change:position', this.seek);
       this.model.bind('change:paused', this.pausedChanged);
       this.player = new yt.Player({
-        controls: true
+        controls: WWM.isModerator
       });
       this.player.state.bind('ready', function() {
         return _this.changeUrl();
@@ -5395,7 +5679,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 
     OnePlayItem.prototype.events = {
       'click .thumbnail': 'thumbnailClicked',
-      'click': 'itemclicked',
+      'click': 'itemClicked',
       'click .remove': 'removeItem'
     };
 
@@ -5409,27 +5693,26 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     };
 
     OnePlayItem.prototype.removeItem = function(e) {
-      this.model.destroy();
       e.preventDefault();
+      this.model.destroy();
       return false;
     };
 
     OnePlayItem.prototype.thumbnailClicked = function(e) {
-      var cur, userId, _ref2;
+      var cur, userId, _ref2, _ref3;
+      e.preventDefault();
       userId = WWM.user._id;
-      cur = (_ref2 = this.model.get('voters')) != null ? _ref2 : new Array;
+      cur = (_ref2 = (_ref3 = this.model.get('voters')) != null ? _ref3.slice() : void 0) != null ? _ref2 : new Array;
       if (cur.indexOf(userId) !== -1) return false;
-      cur = cur.slice();
       cur.push(userId);
       this.model.save({
         voters: cur
       });
       this.model.trigger('votes-changed', this.model);
-      e.preventDefault();
       return false;
     };
 
-    OnePlayItem.prototype.itemclicked = function() {
+    OnePlayItem.prototype.itemClicked = function() {
       return this.model.trigger('selected', this.model);
     };
 
@@ -5454,13 +5737,9 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     }
 
     PlaylistView.prototype.initialize = function() {
-      var _this = this;
       this.collection.bind('add', this.addOne);
       this.collection.bind('reset', this.addAll);
-      return this.collection.bind('change:voters', function() {
-        console.log('Voters changed');
-        return _this.collection.sort();
-      });
+      return this.collection.bind('change:voters', this.collection.sort);
     };
 
     PlaylistView.prototype.addOne = function(item) {
@@ -5658,7 +5937,6 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
 
     SearchView.prototype.onclickselected = function() {
       var id, model;
-      console.log('Click selected!');
       id = this.getSelected().attr('id_model');
       model = this.collection.find(function(item) {
         return item.get('videoId') === id;
