@@ -97,6 +97,7 @@ exports.One = class WatchSession extends Session.Session
 			title: @options.title
 			viewCount: @options.viewCount
 			uploader: @options.uploader
+			thumbnail: @options.thumbnail
 		, defer(err) 
 
 		await @playlist.create
