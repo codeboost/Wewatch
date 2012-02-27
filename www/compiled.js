@@ -5714,6 +5714,7 @@ true;return this};m.prototype.value=function(){return this._wrapped}}).call(this
     OnePlayItem.prototype.thumbnailClicked = function(e) {
       var cur, userId, _ref2, _ref3;
       e.preventDefault();
+      return false;
       userId = WWM.user._id;
       cur = (_ref2 = (_ref3 = this.model.get('voters')) != null ? _ref3.slice() : void 0) != null ? _ref2 : new Array;
       if (cur.indexOf(userId) !== -1) return false;
