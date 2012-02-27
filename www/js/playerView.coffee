@@ -10,7 +10,7 @@ class exports.PlayerView extends Backbone.View
 		@model.bind 'change:paused', @pausedChanged
 
 		@player = new yt.Player 
-			controls: true
+			controls: WWM.isModerator
 
 		@player.state.bind 'ready', =>
 			@changeUrl()

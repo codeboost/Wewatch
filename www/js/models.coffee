@@ -15,6 +15,16 @@ class VideoModel extends Skull.Model
 class UserCollection extends Skull.Collection
 	url: '/users'
 
+class BookmarkItem extends Skull.Model
+	defaults:
+		id_session: 0
+		videoId:''	
+		start: 0
+		length: 0
+
+class Bookmarks extends Skull.Collection
+	url: '/bookmarks'
+	model: BookmarkItem
 
 class PlayItem extends Skull.Model
 	defaults:
@@ -44,5 +54,6 @@ exports.init = (ns, bootstrap) ->
 	(models.users ?= ns.addModel new UserCollection).reset bootstrap.users
 	(models.playlist ?= ns.addModel new Playlist).reset bootstrap.playlist
 	(models.chat ?= new ChatLinesCollection)
+	(models.bookmarks = ns.addModel new Bookmarks).reset bootstrap.bookmarks
 
 	models

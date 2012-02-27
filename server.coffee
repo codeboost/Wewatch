@@ -101,6 +101,8 @@ exports.init = (viewsDir) ->
 		res.render 'w', 	
 			session: data
 			user: req.session.user
+			isModerator: data.creator == req.session.user._id
+
 
 	app.post '/setName', setUser, (req, res) ->
 		name = req.body.name
@@ -117,6 +119,12 @@ exports.init = (viewsDir) ->
 		res.send {status: 'success'}
 
 		console.log req.session.user
+
+	app.get '/about', setUser, (req, res) ->
+		res.render 'about'
+
+	app.get '/help', setUser, (req, res) ->
+		res.render 'help'
 
 			
 				

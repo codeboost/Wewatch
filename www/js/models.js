@@ -1,5 +1,5 @@
 (function() {
-  var ChatLinesCollection, OneChatLine, PlayItem, Playlist, UserCollection, VideoModel, _ref,
+  var BookmarkItem, Bookmarks, ChatLinesCollection, OneChatLine, PlayItem, Playlist, UserCollection, VideoModel, _ref,
     __hasProp = Object.prototype.hasOwnProperty,
     __extends = function(child, parent) { for (var key in parent) { if (__hasProp.call(parent, key)) child[key] = parent[key]; } function ctor() { this.constructor = child; } ctor.prototype = parent.prototype; child.prototype = new ctor; child.__super__ = parent.prototype; return child; };
 
@@ -63,6 +63,41 @@
 
   })(Skull.Collection);
 
+  BookmarkItem = (function(_super) {
+
+    __extends(BookmarkItem, _super);
+
+    function BookmarkItem() {
+      BookmarkItem.__super__.constructor.apply(this, arguments);
+    }
+
+    BookmarkItem.prototype.defaults = {
+      id_session: 0,
+      videoId: '',
+      start: 0,
+      length: 0
+    };
+
+    return BookmarkItem;
+
+  })(Skull.Model);
+
+  Bookmarks = (function(_super) {
+
+    __extends(Bookmarks, _super);
+
+    function Bookmarks() {
+      Bookmarks.__super__.constructor.apply(this, arguments);
+    }
+
+    Bookmarks.prototype.url = '/bookmarks';
+
+    Bookmarks.prototype.model = BookmarkItem;
+
+    return Bookmarks;
+
+  })(Skull.Collection);
+
   PlayItem = (function(_super) {
 
     __extends(PlayItem, _super);
@@ -115,6 +150,7 @@
     ((_ref4 = models.users) != null ? _ref4 : models.users = ns.addModel(new UserCollection)).reset(bootstrap.users);
     ((_ref5 = models.playlist) != null ? _ref5 : models.playlist = ns.addModel(new Playlist)).reset(bootstrap.playlist);
     if (models.chat == null) models.chat = new ChatLinesCollection;
+    (models.bookmarks = ns.addModel(new Bookmarks)).reset(bootstrap.bookmarks);
     return models;
   };
 

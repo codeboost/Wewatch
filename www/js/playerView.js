@@ -30,7 +30,7 @@
       this.model.bind('change:position', this.seek);
       this.model.bind('change:paused', this.pausedChanged);
       this.player = new yt.Player({
-        controls: true
+        controls: WWM.isModerator
       });
       this.player.state.bind('ready', function() {
         return _this.changeUrl();

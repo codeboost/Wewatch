@@ -55,9 +55,16 @@ class VideoModel extends MSkull.Model
 	constructor: (id_session) ->
 		super 'CurVideo', id_session: id_session
 
+
+class Bookmark extends MSkull.Model
+	constructor: (id_session) ->
+		super 'VideoBookmark', {id_session: id_session}
+
+
 exports.Model = class SessionModel extends MSkull.XModel
 	constructor: ->
 		super 'WatchSession'
+
 				
 exports.One = class WatchSession extends Session.Session
 	constructor: (@options, @skullServer) ->
@@ -65,11 +72,13 @@ exports.One = class WatchSession extends Session.Session
 		@users = new UserModel
 		@video = new VideoModel @options._id
 		@playlist = new PlaylistItem @options._id
+		@bookmarks = new Bookmark @options._id
 
 		@ns = @skullServer.of '' + @options._id
 		@ns.addModel '/users', @users
 		@ns.addModel '/video', @video
 		@ns.addModel '/playlist', @playlist
+		@ns.addModel '/bookmarks', @bookmarks
 		console.log 'Created watch session ', @id
 	
 	init: (callback) ->
@@ -146,14 +155,13 @@ exports.One = class WatchSession extends Session.Session
 		await @video.read {}, defer(err, videos)
 		await @playlist.read {}, defer(err, playlist) 
 		await @users.read {}, defer(err, users)
-
-
-
+		await @bookmarks.read {}, defer(err, bookmarks)
 
 		ret = 
 			playlist: playlist
 			users: users
 			video: videos[0]
+			bookmarks: bookmarks
 
 		callback null, ret
 

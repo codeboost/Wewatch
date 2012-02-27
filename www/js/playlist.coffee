@@ -9,7 +9,7 @@ class OnePlayItem extends Backbone.View
 
 	events:
 		'click .thumbnail': 'thumbnailClicked'
-		'click': 'itemclicked'
+		'click': 'itemClicked'
 		'click .remove': 'removeItem'
 
 	initialize: ->
@@ -18,33 +18,27 @@ class OnePlayItem extends Backbone.View
 		@model.bind 'remove', => @remove()
 	
 	removeItem: (e) =>
-		@model.destroy()
 		e.preventDefault()
+		@model.destroy()
 		return false
 	
 	thumbnailClicked: (e) =>
+		e.preventDefault()
 
 		userId = WWM.user._id
-
-		cur = @model.get('voters') ? new Array
-
+		cur = @model.get('voters')?.slice() ? new Array
 		if cur.indexOf(userId) isnt -1 then return false
 
 		#make a copy of the array. We are currently holding a reference to the model's array
 		#and Backbone won't fire 'change:voters'.
-		cur = cur.slice()
-
 		cur.push userId
-
-		@model.save
-			voters: cur
-	
+		@model.save {voters: cur}
 		@model.trigger 'votes-changed', @model
-		e.preventDefault()
+
 		false
 
 
-	itemclicked: ->
+	itemClicked: ->
 		@model.trigger 'selected', @model
 
 	render: =>
@@ -56,10 +50,7 @@ class PlaylistView extends Backbone.View
 	initialize: ->
 		@collection.bind 'add', @addOne
 		@collection.bind 'reset', @addAll
-		#@collection.bind 'votes-changed', @collection.sort
-		@collection.bind 'change:voters', =>
-			console.log 'Voters changed'
-			@collection.sort()
+		@collection.bind 'change:voters', @collection.sort
 
 	addOne: (item) =>
 		view = new OnePlayItem model: item

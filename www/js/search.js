@@ -129,7 +129,6 @@
 
     SearchView.prototype.onclickselected = function() {
       var id, model;
-      console.log('Click selected!');
       id = this.getSelected().attr('id_model');
       model = this.collection.find(function(item) {
         return item.get('videoId') === id;

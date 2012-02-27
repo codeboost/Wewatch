@@ -2,17 +2,30 @@
 html
 	head
 		title We watch
-		link(rel='stylesheet', type='text/css', href='/css/bootstrap-2.0.css')
+	
+		- if (isProduction)
+			link(rel='stylesheet', type='text/css', href='/css/bootstrap.min.css')
+		- else
+			link(rel='stylesheet', type='text/css', href='/css/bootstrap.css')
+		
+
+
 		block scripts
 			script(src='/js/lib/jquery-1.7.1.min.js')
 body
 	.navbar.navbar-fixed
 		.navbar-inner
 			.container
+				ul.nav.pull-right
+					li 
+						a(href='/about') About
+					li
+						a(href='http://github.com/codeboost/Wewatch') Source
+					li
+						a(href='http://github.com/codeboost/Wewatch/issues') Report bugs
 				a.brand(href='/') 
 					strong Wewatch
 					span(style='color: #0C89F3') .me
-				p Watch youtube together 
 
 	.container#main-container(style='margin-top: 50px')
 		block content

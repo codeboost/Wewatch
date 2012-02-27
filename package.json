@@ -5,9 +5,10 @@
 		"express": ">=2.4.4",
 		"socket.io": "> 0.8.4",
 		"underscore": ">=1.2.0",
-		"jade": ">=0.14.2",
+		"jade": ">=0.20.3",
 		"skull.io": ">0.1.0",
 		"mongoose": "*"
+		"markdown": "*"
 	},
 	"scripts": {
 		"start":"coffee server"

@@ -64,7 +64,6 @@ exports.View = class SearchView extends Backbone.View
 			false
 	
 	onclickselected: =>
-		console.log 'Click selected!'
 		id = @getSelected().attr('id_model')
 
 		model = @collection.find (item) -> item.get('videoId') == id

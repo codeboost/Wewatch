@@ -91,6 +91,8 @@
       return this.messages.render();
     };
 
+    ChatView.prototype.resizeLayout = function() {};
+
     ChatView.prototype.onChatKeyUp = function(e) {
       var data, txt;
       if (e.keyCode === 13) {

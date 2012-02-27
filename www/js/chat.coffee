@@ -45,6 +45,9 @@ exports.View = class ChatView extends Backbone.View
 
 		@messages.render()
 
+	resizeLayout: ->
+		
+
 	onChatKeyUp: (e) =>
 		if e.keyCode == 13
 			txt = $.trim @chatInput.val()

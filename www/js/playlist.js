@@ -29,7 +29,7 @@
 
     OnePlayItem.prototype.events = {
       'click .thumbnail': 'thumbnailClicked',
-      'click': 'itemclicked',
+      'click': 'itemClicked',
       'click .remove': 'removeItem'
     };
 
@@ -43,27 +43,26 @@
     };
 
     OnePlayItem.prototype.removeItem = function(e) {
-      this.model.destroy();
       e.preventDefault();
+      this.model.destroy();
       return false;
     };
 
     OnePlayItem.prototype.thumbnailClicked = function(e) {
-      var cur, userId, _ref2;
+      var cur, userId, _ref2, _ref3;
+      e.preventDefault();
       userId = WWM.user._id;
-      cur = (_ref2 = this.model.get('voters')) != null ? _ref2 : new Array;
+      cur = (_ref2 = (_ref3 = this.model.get('voters')) != null ? _ref3.slice() : void 0) != null ? _ref2 : new Array;
       if (cur.indexOf(userId) !== -1) return false;
-      cur = cur.slice();
       cur.push(userId);
       this.model.save({
         voters: cur
       });
       this.model.trigger('votes-changed', this.model);
-      e.preventDefault();
       return false;
     };
 
-    OnePlayItem.prototype.itemclicked = function() {
+    OnePlayItem.prototype.itemClicked = function() {
       return this.model.trigger('selected', this.model);
     };
 
@@ -88,13 +87,9 @@
     }
 
     PlaylistView.prototype.initialize = function() {
-      var _this = this;
       this.collection.bind('add', this.addOne);
       this.collection.bind('reset', this.addAll);
-      return this.collection.bind('change:voters', function() {
-        console.log('Voters changed');
-        return _this.collection.sort();
-      });
+      return this.collection.bind('change:voters', this.collection.sort);
     };
 
     PlaylistView.prototype.addOne = function(item) {

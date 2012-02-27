@@ -9,17 +9,19 @@ block scripts
 			_id: '#{session._id}',
 			creator: '#{session.creator}'
 		}
+
+		WWM.isModerator = #{isModerator};
+
 		WWM.user = {
 			_id: '#{user._id}',
 			name: '#{user.name}'
 		}
 
-	- if(isProduction){
+	- if(isProduction)
 		script(src='/compiled.min.js')
 		script(src='/vendor/bootstrap-modal.js')		
-	- } else {
+	- else 
 		script(src='/vendor/jquery-1.7.1.min.js')
-		//script(src='/vendor/zepto.min.js')
 		script(src='/vendor/console-dummy.js')
 		script(src='/vendor/underscore.js')
 		script(src='/vendor/backbone-0.9.1.js')
@@ -35,9 +37,10 @@ block scripts
 		script(src='/js/models.js')	
 		script(src='/js/search.js')	
 		script(src='/js/playlist.js')	
+		script(src='/js/bookmarks.js')	
 		script(src='/js/chat.js')	
 		script(src='/js/app.js')	
-		- }
+
 	script
 		require('app').start();	
 block content
@@ -70,17 +73,30 @@ block content
 				.row
 					.span8
 						ul.messages.items
-		.span4.playlist-view
+		.span4.right-side(style='display: none')
 			.row
 				.span4
+					ul.nav.nav-tabs
+						li.active.select-playlist
+							a(href='#') Playlist
+						li.select-bookmarks
+							a(href='#') Bookmarks
+					
+			.row
+				.span4.playlist-view
 					.well.search-view(style='display: none')
 						h4 Add video:
 						input.search-video(type='text')
 						.search-place.span4(style='margin-left: 0; overflow-y: auto; height: 200px')
 							table.search-results(width='100%')
-			.row
-				.span4
+		
 					table.playlist(width='100%')
+			.row
+				.span4.bookmarks-view(style='display: none')
+					.well
+						button.btn.btn-inverse.mark-in Set Bookmark
+					div(style='height: 8px')
+					table.bookmarks(width='100%')
 
 	script(src='http://static.ak.fbcdn.net/connect.php/js/FB.Share')
 
@@ -104,6 +120,16 @@ block templates
 		td(valign='middle', style='position: relative')
 			h3.vote-count {{voters? voters.length : 0}}
 			a.remove(href='#', class="{{WWM.isModerator ? '': 'hidden'}}" ) &times;
+
+	script#one-bookmark-item(type='template')
+		td(width='140')
+			.thumbnail
+				img(src='{{thumbnail}}')
+		td(valign='top', align='left')
+			h4.video-title	{{title}}
+			span.startTime {{startTime}} 
+		td(valign='middle', style='position: relative')
+			a.remove(href='#') &times;
 
 
 	script#one-chat-item(type='template')
