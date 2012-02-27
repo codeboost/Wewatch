@@ -118,7 +118,6 @@ block templates
 			.author {{uploader}}
 			.views {{viewCount}} views
 		td(valign='middle', style='position: relative')
-			h3.vote-count {{voters? voters.length : 0}}
 			a.remove(href='#', class="{{WWM.isModerator ? '': 'hidden'}}" ) &times;
 
 	script#one-bookmark-item(type='template')

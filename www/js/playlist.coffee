@@ -23,8 +23,10 @@ class OnePlayItem extends Backbone.View
 		return false
 	
 	thumbnailClicked: (e) =>
-		e.preventDefault()
 
+		e.preventDefault()
+		return false
+		#This functionality is disabled for the time being.
 		userId = WWM.user._id
 		cur = @model.get('voters')?.slice() ? new Array
 		if cur.indexOf(userId) isnt -1 then return false
