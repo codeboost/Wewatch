@@ -7,7 +7,7 @@
 		"underscore": ">=1.2.0",
 		"jade": ">=0.20.3",
 		"skull.io": ">0.1.0",
-		"mongoose": "*"
+		"mongoose": "*",
 		"markdown": "*"
 	},
 	"scripts": {
