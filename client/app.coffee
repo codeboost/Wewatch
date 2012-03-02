@@ -84,8 +84,7 @@ class VideoInfo extends Backbone.View
 	update: =>
 		if WWM.isModerator
 			@title.text 'You are presenting'
-			@$('.search-view').show()
-			@$('.right-side').show()
+			#@$('.right-side').show()
 		else
 
 			ret = @options.usersModel.filter (usr) -> WWM.session.creator == usr.get('id_user')

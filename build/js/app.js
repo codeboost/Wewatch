@@ -132,8 +132,6 @@
       var presenter, ret, viewCount, _ref2, _ref3;
       if (WWM.isModerator) {
         this.title.text('You are presenting');
-        this.$('.search-view').show();
-        this.$('.right-side').show();
       } else {
         ret = this.options.usersModel.filter(function(usr) {
           return WWM.session.creator === usr.get('id_user');
