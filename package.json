@@ -8,7 +8,8 @@
 		"jade": ">=0.20.3",
 		"skull.io": ">0.1.0",
 		"mongoose": "*",
-		"markdown": "*"
+		"markdown": "*",
+		"iced-cofee-script": "*"
 	},
 	"scripts": {
 		"start":"coffee server"
