@@ -203,12 +203,12 @@ WWM.bindEvents = ->
 		WWM.models.video.set vid 
 
 	#chat message arrives from server
-	WWM.models.users.bind 'server-broadcast', WWM.models.chat.add
+	WWM.models.users.bind 'server-broadcast', (data) -> WWM.models.chat.add(data)
 	
 	#new chat message entered by user
 	#do not bind to 'add', because it gets triggered when data is received from the server. 
 	#new-msg means *current* user typed in something
-	WWM.models.chat.bind 'new-msg', WWM.models.users.broadcast
+	WWM.models.chat.bind 'new-msg', (data) -> WWM.models.users.broadcast(data)
 
 
 	WWM.models.bookmarks.bind 'selected', (model) ->

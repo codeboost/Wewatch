@@ -294,8 +294,12 @@
       delete vid._id;
       return WWM.models.video.set(vid);
     });
-    WWM.models.users.bind('server-broadcast', WWM.models.chat.add);
-    WWM.models.chat.bind('new-msg', WWM.models.users.broadcast);
+    WWM.models.users.bind('server-broadcast', function(data) {
+      return WWM.models.chat.add(data);
+    });
+    WWM.models.chat.bind('new-msg', function(data) {
+      return WWM.models.users.broadcast(data);
+    });
     return WWM.models.bookmarks.bind('selected', function(model) {
       var vid;
       if (!WWM.isModerator) return;
