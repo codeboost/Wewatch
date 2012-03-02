@@ -251,7 +251,6 @@
 
     AppView.prototype.markIn = function() {
       var point;
-      if (!WWM.isModerator) return;
       this.rightSide.selectBookmarks();
       point = WWM.models.video.toJSON();
       delete point._id;

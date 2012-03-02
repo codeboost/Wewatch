@@ -161,7 +161,7 @@ class AppView extends Backbone.View
 		WWM.initialized = true
 
 	markIn: ->
-		return unless WWM.isModerator
+
 		@rightSide.selectBookmarks()
 
 		point = WWM.models.video.toJSON()
