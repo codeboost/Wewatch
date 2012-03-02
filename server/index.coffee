@@ -6,6 +6,7 @@ conf = require('./config')
 require('./models')
 _ = require 'underscore'
 MSkull = require './mongoose-skull'
+path = require 'path'
 
 mongoose.connect conf.db.path
 
@@ -16,16 +17,25 @@ mongoose.connection.on 'error', (err) ->
 SessionStore = require('./sessionStore').SessionStore
 sessionStore = new SessionStore()
 
-#Models = 
-#	User: mongoose.model 'User'
-
 class UserModel extends MSkull.Model
 	model: 'User'
 
 g_User = new UserModel
 
 
+if process.argv[2] == 'debug'
+	conf.server.production = false
+
+
+
 exports.init = (viewsDir) ->
+	if conf.server.production
+		console.log 'Initializing PRODUCTION server'
+	else
+		console.log 'Initializing DEBUG server'
+
+	console.log 'Configuration: ', conf
+
 	app = express.createServer()
 	app.configure ->
 		app.use express.bodyParser()
@@ -63,6 +73,12 @@ exports.init = (viewsDir) ->
 			next()
 		else
 			next()
+
+	if conf.server.production is off
+		app.get '/js/*', (req, res) ->
+			filename = path.normalize __dirname + '/../build/js/' + req.params[0]
+			console.log 'Sending file ', filename
+			res.sendfile filename
 
 	app.get '/', setUser, (req, res) ->
 		res.render 'index'

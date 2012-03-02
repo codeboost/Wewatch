@@ -38,8 +38,6 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 		console.log 'Authorize user %s ', sid
 		await @User.findOne {sid: sid}, defer(err, user) 
 
-		console.log 'Found user: ', user
-
 		callback err, user
 
 	userConnected: (socket) ->
@@ -66,7 +64,6 @@ exports.Server = class WatchSessionManager extends Session.SessionManager
 
 	createSession: (sessionData, callback) ->
 		sessionData.docid = g_SessionId++
-		console.log 'Create session %j', sessionData
 
 		await @sessionModel.create sessionData, defer(err, sess)
 

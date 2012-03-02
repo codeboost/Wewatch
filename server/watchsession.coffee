@@ -85,10 +85,8 @@ exports.One = class WatchSession extends Session.Session
 		#check if we already have a record
 		await @video.read {}, defer(err, videos)
 		vid = videos?[0]
-		console.log 'Video read: ', vid
 
 		return callback null if vid
-		console.log 'Initialized new video'
 		
 		#create default video record
 		await @video.create 
@@ -116,8 +114,6 @@ exports.One = class WatchSession extends Session.Session
 	addUser: (socket, callback) ->
 		user = socket.handshake.user
 
-		console.log 'Add User: ', user
-
 		await @users.create 
 			id_user: user._id
 			_id: @users.next_id()
@@ -136,7 +132,6 @@ exports.One = class WatchSession extends Session.Session
 		callback null
 
 	updateMemberDetails: (user, callback) ->
-		console.log 'Updating member details: ', user
 
 		await @users.findByUid user._id, defer(err, member)
 
@@ -167,10 +162,8 @@ exports.One = class WatchSession extends Session.Session
 		callback null, ret
 
 	data: (callback) ->
-		console.log 'Reading data.'
 		await @video.read {}, defer(err, videos)
 		video = videos[0]
-		console.log 'READ DATA: ', video
 		res = 
 			docid: @options.docid
 			_id: @options._id

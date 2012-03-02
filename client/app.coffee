@@ -7,12 +7,6 @@ NameDialog = require 'name-dialog'
 Chat = require 'chat'
 Bookmarks = require 'bookmarks'
 
-
-try
-	Skull = require 'skull-client'
-catch e
-	Skull = require 'skull'
-
 WWM.Player = null
 
 WWM.isModerator = WWM.session.creator == WWM.user._id

@@ -1,9 +1,16 @@
 extends layout
 block scripts
-	script(src='/vendor/jquery-1.7.1.min.js')
-	script(src='/vendor/module.js')
-	script(src='/js/utils.js')
-	script(src='/js/index.js')
+	- if(isProduction)
+		script(src='/compiled.min.js')
+	- else
+		script(src='/vendor/jquery-1.7.1.min.js')
+		script(src='/vendor/module.js')
+		script(src='/js/utils.js')
+		script(src='/js/index.js')
+
+	script
+		require('index').start();	
+
 block content
 	section(id='url')
 		.row
@@ -12,7 +19,7 @@ block content
 					.span12
 						h3 Enter a Youtube URL
 				.row
-					form.you(action='createSession', method='post')
+					form.you(action='javascript:false', method='post')
 						.span8
 							input.span8(type='text', name='url', style='height: 25px; font-size: 20px;') 
 						.span4						
