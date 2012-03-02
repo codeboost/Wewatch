@@ -9,7 +9,7 @@
 		"skull.io": ">0.1.0",
 		"mongoose": "*",
 		"markdown": "*",
-		"iced-cofee-script": "*"
+		"iced-coffee-script": "*"
 	},
 	"scripts": {
 		"start":"coffee server"
