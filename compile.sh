@@ -1,1 +1,1 @@
-iced -c -w -o build/js client
+iced -c -w -o build/js client &

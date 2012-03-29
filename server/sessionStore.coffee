@@ -22,18 +22,8 @@ class exports.SessionStore extends express.session.Store
 			session: session
 		, {upsert: true}, (err, sess) ->
 				fn?(err)
-			
-			
-	
+
 	destroy: (sid, fn) ->
 		@sessionModel.remove sid:sid, (err) ->
 			console.dir err
 	
-	all: (fn) ->
-		console.log 'Alll'
-		
-	clear: (fn) ->
-		console.log 'Clear'
-		
-	length: (fn) ->
-		console.log 'Length'

@@ -145,6 +145,10 @@
 	overflow-y: auto;
 }
 
+img.related{
+	margin-left: 8px;
+	display: inline;
+}
 
 
 

@@ -44,6 +44,9 @@ exports.View = class SearchView extends Backbone.View
 			return if $(e.target).is('input.search-video') #don't hide if we click in the search input
 			@searchResults.hide()
 
+		@$('.related').click =>
+			@relatedSearch()
+
 		@input.focus (e) =>
 			@showSearchResults()
 	
@@ -141,6 +144,20 @@ exports.View = class SearchView extends Backbone.View
 		#srHeight = docHeight - top - 10
 		@searchResults.height srHeight
 		
+	relatedSearch: =>
+		
+		curUrl = WWM.models.video.get 'url'
+		videoId = utils.extractVideoId curUrl
+		return unless videoId?.length
+
+		$.getJSON 'https://gdata.youtube.com/feeds/api/videos/' + videoId + '/related?v=2&alt=jsonc&callback=?', (resp, textStatus) =>
+			if textStatus == 'success'
+					items = (@extractAttributes(item) for item in resp.data.items)
+					@collection.reset items
+					@showSearchResults()
+				else
+					console.log 'Cannot get video info'
+
 
 	performSearch: =>
 		txt = $.trim @input.val()
