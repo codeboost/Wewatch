@@ -2,12 +2,12 @@
 	"name": "wewatch",
 	"version": "0.1.0",
 	"dependencies": {
-		"express": ">=2.4.4",
-		"socket.io": "> 0.8.4",
-		"underscore": ">=1.2.0",
-		"jade": ">=0.20.3",
+		"express": "2.4.4",
+		"socket.io": " 0.8.4",
+		"underscore": "1.2.0",
+		"jade": "0.20.3",
 		"skull.io": ">0.1.0",
-		"mongoose": "*",
+		"mongoose": "2.5.1",
 		"markdown": "*",
 		"iced-coffee-script": "*"
 	},
