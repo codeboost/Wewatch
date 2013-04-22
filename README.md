@@ -53,8 +53,8 @@ www
 
 Installing
 ----------
-
 	git clone git@github.com:codeboost/Wewatch.git
+	npm install -g iced-coffee-script
 	npm install
 	iced server
 
